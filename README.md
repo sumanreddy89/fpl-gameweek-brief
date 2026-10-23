@@ -1,6 +1,26 @@
+[README.md](https://github.com/user-attachments/files/33878530/README.md)
 # FPL Gameweek Brief
 
-An agent skill that prepares a Fantasy Premier League brief before each gameweek deadline. Give it your FPL team ID. It returns:
+A Claude skill that preps your Fantasy Premier League team before every deadline. Give it your team ID and it tells you who's injured, who to bring in, who to captain and who to bench.
+
+<p align="center"><img src="docs/example-brief.png" alt="Example brief for Gameweek 8: squad flags, two suggested transfers and captain picks" width="480"></p>
+
+## Try it in 2 minutes
+
+1. **Download the skill.** Click **Code → Download ZIP** at the top of this page.
+2. **Add it to Claude.** In Claude, go to **Settings → Capabilities** and upload the ZIP as a skill. In Claude Code, clone it into your skills folder instead:
+   ```bash
+   git clone https://github.com/sumanreddy89/fpl-gameweek-brief ~/.claude/skills/fpl-gameweek-brief
+   ```
+3. **Find your team ID.** On the FPL website, open **Points** and copy the number from the address bar: `fantasy.premierleague.com/entry/`**`1234567`**`/event/8`
+4. **Ask Claude:**
+   > Prep my FPL team for the next gameweek. My team ID is 1234567.
+
+Made transfers since the last deadline? FPL keeps them private until the deadline passes, so paste your current 15 players or a screenshot of your Pick Team screen along with the question.
+
+## What you get
+
+Every brief includes:
 
 - **Squad flags:** injuries, suspensions, doubts and players losing minutes, each with a dated source
 - **Transfer options:** one to three moves that fit your bank and free transfers, plus whether to roll or take a hit
@@ -8,13 +28,15 @@ An agent skill that prepares a Fantasy Premier League brief before each gameweek
 - **A starting XI and bench order** that works with the auto-sub rules
 - **Chip timing and a price-change watch**
 
-The skill just recommends basis the above. It never signs in to FPL or changes your team.
+The skill only recommends. It never signs in to FPL or changes your team.
 
 ## What's inside
 
 ```
 fpl-gameweek-brief/
 ├── SKILL.md                 # instructions the agent follows
+├── docs/
+│   └── example-brief.png    # the example above
 └── scripts/
     └── fpl_snapshot.py      # pulls and trims the public FPL data (Python 3, standard library only)
 ```
@@ -36,19 +58,9 @@ Useful options:
 | `--min-minutes 450` | Leaves out candidates with fewer season minutes than this, so one big game doesn't top the list |
 | `--data-dir DIR` | Reads saved JSON files instead of the live API, for offline testing |
 
-## Install
+## Other agents
 
-The skill uses the open Agent Skills layout: a folder containing a `SKILL.md`.
-
-- **Claude:** upload the folder as a skill in Settings → Capabilities, or copy it into `~/.claude/skills/` for Claude Code.
-- **Other agents** that support the same format: put the folder wherever that agent loads skills from.
-
-Then ask something like *"Prep my FPL team for the next gameweek. My team ID is 1234567."*
-
-## Finding your team ID
-
-Open the FPL website, go to **Points**, and copy the number from the address bar:
-`fantasy.premierleague.com/entry/`**`1234567`**`/event/8`
+The skill uses the open Agent Skills layout: a folder containing a `SKILL.md`. Agents that support the same format can load it from wherever they keep skills.
 
 ## Limits
 
