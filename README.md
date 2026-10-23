@@ -7,8 +7,8 @@ A Claude skill that preps your Fantasy Premier League team before every deadline
 
 ## Try it in 2 minutes
 
-1. **Download the skill.** Click **Code → Download ZIP** at the top of this page.
-2. **Add it to Claude.** In Claude, go to **Settings → Capabilities** and upload the ZIP as a skill. In Claude Code, clone it into your skills folder instead:
+1. **Download the skill.** Get `fpl-gameweek-brief.zip` from the [latest release](https://github.com/sumanreddy89/fpl-gameweek-brief/releases/latest). Use this file rather than **Code → Download ZIP**: Claude needs the folder inside the ZIP to be named exactly `fpl-gameweek-brief`, and GitHub's own download adds `-main` to it.
+2. **Add it to Claude.** First turn on **Code execution and file creation** in **Settings → Capabilities**. Then go to **Customize → Skills**, click **+**, choose **Create skill → Upload a skill**, and pick the ZIP. In Claude Code, clone it into your skills folder instead:
    ```bash
    git clone https://github.com/sumanreddy89/fpl-gameweek-brief ~/.claude/skills/fpl-gameweek-brief
    ```
