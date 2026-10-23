@@ -8,7 +8,7 @@ An agent skill that prepares a Fantasy Premier League brief before each gameweek
 - **A starting XI and bench order** that works with the auto-sub rules
 - **Chip timing and a price-change watch**
 
-The skill only recommends. It never signs in to FPL or changes your team.
+The skill just recommends basis the above. It never signs in to FPL or changes your team.
 
 ## What's inside
 
