@@ -1,6 +1,8 @@
-
+---
 name: fpl-gameweek-brief
 description: Preps a Fantasy Premier League team before a gameweek deadline: injury flags, transfers, captain, XI, bench and chips. Use for questions about an FPL team, transfers, captain or bench.
+
+---
 
 # FPL gameweek brief
 
