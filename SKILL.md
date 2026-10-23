@@ -1,3 +1,8 @@
+---
+name: fpl-gameweek-brief
+description: Preps a Fantasy Premier League team before a gameweek deadline: injury flags, transfers, captain, XI, bench and chips. Use for questions about an FPL team, transfers, captain or bench.
+---
+
 # FPL gameweek brief
 
 Produce a short, sourced brief that helps one manager decide what to do before the next Fantasy Premier League deadline. The brief makes recommendations only. Never sign in to FPL, make transfers, change the captain or play a chip unless the manager asks for that specific change in the conversation and confirms it.
