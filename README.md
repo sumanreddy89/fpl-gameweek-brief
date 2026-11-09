@@ -75,16 +75,20 @@ python3 scripts/fpl_daily.py --team-id 1234567     # is a brief due today, and a
 
 `fpl_leagues.py` shows the players who gained or lost you the most against each league's average, plus rival ownership, captains and chips. It makes about one request per rival per gameweek, so it only covers private leagues of up to 30 managers unless you name one with `--league`. A full season can take a couple of minutes.
 
-### Reading the pick numbers
+### Reading the mini-league numbers
 
-A figure like **Haaland +34** or **Raya −29** means that player gained or cost you that many points against the average manager in that league, added up over the season so far.
-
-For each gameweek: (your multiplier − the league's average multiplier) × the player's points. A multiplier is 0 if he's not in your starting XI, 1 if he starts, 2 as captain and 3 with Triple Captain.
+For each gameweek, a player's number is: (your multiplier − the league's average multiplier) × his points. A multiplier is 0 if he's not in your starting XI, 1 if he starts, 2 as captain and 3 with Triple Captain.
 
 - You captain a player who scores 10, and the league's average multiplier for him is 1.2: (2 − 1.2) × 10 = **+8**.
 - You don't own a player who scores 6, and the league's average multiplier for him is 0.7: (0 − 0.7) × 6 = **−4.2**.
 
-A negative number doesn't mean the player is bad. It means your rivals got more from him than you did. All the numbers in a league add up to your gap to that league's average, before hits.
+The script reports three views for each league:
+
+- **Each gameweek:** the player who gave you the biggest upside and the biggest downside against the league that week.
+- **Each position:** your net gain or loss for goalkeepers, defenders, midfielders and forwards, over the season and the last five gameweeks.
+- **Each player, across the season:** the total, split into what came from owning him and what came from captaining him.
+
+Read season totals by position. Players in one position replace each other, so choosing Verbruggen over Raya shows up as a gain and a loss, but it's one decision. A negative number only means your rivals got more from that player than you did. All the numbers in a league add up to your gap to its average, before hits.
 
 ### Running it on a schedule
 

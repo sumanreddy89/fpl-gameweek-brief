@@ -4,7 +4,9 @@
 For each player, impact = (your multiplier - the league's average multiplier) x
 his points, summed over finished gameweeks. A player's multiplier is 0 on the
 bench, 1 starting, 2 as captain and 3 with Triple Captain. Impacts add up to the
-manager's exact gap to the league average, before hits.
+manager's exact gap to the league average, before hits. Each gameweek shows its
+biggest upside and downside player. Season totals are netted by position, because
+players in one position replace each other: Verbruggen over Raya is one decision.
 
 Rival squads are public only after each deadline. Standard library only.
 """
@@ -18,6 +20,7 @@ import fpl_snapshot as snap
 
 DIFFERENTIAL_SHARE = 0.25
 RIVAL_ONLY_SHARE = 0.4
+RECENT_GAMEWEEKS = 5
 
 
 def member_history(src, entry, gaps):
@@ -37,13 +40,61 @@ def picks_for(src, entry, gw):
     return {p["element"]: p["multiplier"] for p in data["picks"]}
 
 
-def ranked(impact, by_id, limit, reverse):
+def name_of(pid, by_id):
+    return by_id[pid]["web_name"] if pid in by_id else f"id {pid}"
+
+
+def position_of(pid, by_id):
+    return snap.POS.get(by_id.get(pid, {}).get("element_type"), "?")
+
+
+def ranked(impact, split, by_id, limit, reverse):
+    """Top season-long edges, split into ownership and captaincy."""
     rows = sorted(impact.items(), key=lambda kv: kv[1], reverse=reverse)
     out = []
     for pid, value in rows[:limit]:
         if (value > 0) == reverse and value != 0:
-            name = by_id[pid]["web_name"] if pid in by_id else f"id {pid}"
-            out.append({"player": name, "points": round(value, 1)})
+            out.append({"player": name_of(pid, by_id), "points": round(value, 1),
+                        "from_ownership": round(split[pid][0], 1),
+                        "from_captaincy": round(split[pid][1], 1)})
+    return out
+
+
+def swing(pid, value, mine, others, points, by_id):
+    """How one player moved the manager against the league in one gameweek."""
+    average = sum(p.get(pid, 0) for p in others) / len(others)
+    return {"player": name_of(pid, by_id), "position": position_of(pid, by_id),
+            "points": round(value, 1), "your_multiplier": mine.get(pid, 0),
+            "league_avg_multiplier": round(average, 2), "player_points": points.get(pid, 0)}
+
+
+def gameweek_row(gw, values, mine, others, points, by_id):
+    """A gameweek's gap to the league, with its biggest upside and downside player."""
+    best = max(values, key=values.get)
+    worst = min(values, key=values.get)
+    return {"gw": gw, "vs_league_avg": round(sum(values.values()), 1),
+            "biggest_upside": (swing(best, values[best], mine, others, points, by_id)
+                               if values[best] > 0 else None),
+            "biggest_downside": (swing(worst, values[worst], mine, others, points, by_id)
+                                 if values[worst] < 0 else None)}
+
+
+def position_summary(impact, recent, by_id):
+    """Net by position, because players in one position replace each other."""
+    out = []
+    for position in list(snap.POS.values()):
+        pids = [p for p in impact if position_of(p, by_id) == position]
+        if not pids:
+            continue
+        top = max(pids, key=impact.get)
+        low = min(pids, key=impact.get)
+        out.append({"position": position,
+                    "net": round(sum(impact[p] for p in pids), 1),
+                    "last_5_net": round(sum(recent.get(p, 0.0) for p in pids), 1),
+                    "biggest_gain": ({"player": name_of(top, by_id), "points": round(impact[top], 1)}
+                                     if impact[top] > 0 else None),
+                    "biggest_loss": ({"player": name_of(low, by_id), "points": round(impact[low], 1)}
+                                     if impact[low] < 0 else None)})
     return out
 
 
@@ -53,9 +104,9 @@ def analyse_league(src, team_id, league, gws, live, by_id, boot, next_gw, top, g
         gaps.append(f"{league['name']}: only the top 50 managers were compared.")
     members = [r for r in standing["results"]]
     rivals = [r for r in members if r["entry"] != team_id]
-    impact, last_impact = {}, {}
-    gap = captaincy = last_gap = 0.0
-    compared = 0
+    impact, split, recent, gameweeks = {}, {}, {}, []
+    captaincy = 0.0
+    recent_gws = set(gws[-RECENT_GAMEWEEKS:])
     for gw in gws:
         mine = picks_for(src, team_id, gw)
         if mine is None:
@@ -63,18 +114,23 @@ def analyse_league(src, team_id, league, gws, live, by_id, boot, next_gw, top, g
         others = [p for p in (picks_for(src, r["entry"], gw) for r in rivals) if p is not None]
         if not others:
             continue
-        compared += 1
         points = live[gw]
+        values = {}
         for pid in set(mine).union(*others):
-            average = sum(p.get(pid, 0) for p in others) / len(others)
-            value = (mine.get(pid, 0) - average) * points.get(pid, 0)
+            scored = points.get(pid, 0)
+            ownership = (min(mine.get(pid, 0), 1)
+                         - sum(min(p.get(pid, 0), 1) for p in others) / len(others)) * scored
+            armband = (max(mine.get(pid, 0) - 1, 0)
+                       - sum(max(p.get(pid, 0) - 1, 0) for p in others) / len(others)) * scored
+            value = ownership + armband
+            values[pid] = value
             impact[pid] = impact.get(pid, 0.0) + value
-            gap += value
-            armband_avg = sum(max(p.get(pid, 0) - 1, 0) for p in others) / len(others)
-            captaincy += (max(mine.get(pid, 0) - 1, 0) - armband_avg) * points.get(pid, 0)
-            if gw == gws[-1]:
-                last_impact[pid] = value
-                last_gap += value
+            own_total, cap_total = split.get(pid, (0.0, 0.0))
+            split[pid] = (own_total + ownership, cap_total + armband)
+            captaincy += armband
+            if gw in recent_gws:
+                recent[pid] = recent.get(pid, 0.0) + value
+        gameweeks.append(gameweek_row(gw, values, mine, others, points, by_id))
 
     history = {r["entry"]: member_history(src, r["entry"], gaps) for r in members}
     my_rank = next((r["rank"] for r in members if r["entry"] == team_id), None)
@@ -97,7 +153,7 @@ def analyse_league(src, team_id, league, gws, live, by_id, boot, next_gw, top, g
             if p["is_captain"]:
                 captains[p["element"]] = captains.get(p["element"], 0) + 1
     size = len(rival_squads)
-    name = lambda pid: by_id[pid]["web_name"] if pid in by_id else f"id {pid}"
+    name = lambda pid: name_of(pid, by_id)
     rival_only = sorted(((n, p) for p, n in owners.items()
                          if p not in mine_locked and size and n / size >= RIVAL_ONLY_SHARE),
                         reverse=True)
@@ -120,16 +176,16 @@ def analyse_league(src, team_id, league, gws, live, by_id, boot, next_gw, top, g
         "managers": league.get("rank_count"),
         "rank": league.get("entry_rank"),
         "last_rank": league.get("entry_last_rank"),
-        "gameweeks_compared": compared,
-        "points_vs_league_avg": round(gap, 1),
+        "gameweeks_compared": len(gameweeks),
+        "points_vs_league_avg": round(sum(impact.values()), 1),
+        "last_5_vs_league_avg": round(sum(recent.values()), 1),
         "captaincy_vs_league_avg": round(captaincy, 1),
-        "last_gw_vs_league_avg": round(last_gap, 1),
         "hits_taken": my_hits,
         "avg_rival_hits": round(sum(rival_hits) / len(rival_hits), 1) if rival_hits else None,
-        "best_picks": ranked(impact, by_id, top, True),
-        "worst_picks": ranked(impact, by_id, top, False),
-        "last_gw_best": ranked(last_impact, by_id, 3, True),
-        "last_gw_worst": ranked(last_impact, by_id, 3, False),
+        "by_gameweek": gameweeks,
+        "by_position": position_summary(impact, recent, by_id),
+        "best_picks": ranked(impact, split, by_id, top, True),
+        "worst_picks": ranked(impact, split, by_id, top, False),
         "next_deadline": {
             "rivals_counted": size,
             "rivals_own_you_dont": [{"player": name(p), "rivals": n} for n, p in rival_only[:top]],
@@ -174,7 +230,8 @@ def build(args, src):
     return {"finished_gameweeks": [gws[0], gws[-1]],
             "best_league": results[0]["league"],
             "worst_league": results[-1]["league"],
-            "note": "Impacts are before hits and add up to points_vs_league_avg.",
+            "note": ("Impacts are before hits and add up to points_vs_league_avg. Don't read a "
+                     "single player's season total alone: use by_position for the net effect."),
             "leagues": results,
             "data_gaps": sorted(set(gaps)) or None}
 
