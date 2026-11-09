@@ -88,6 +88,8 @@ The script reports three views for each league:
 - **Each position:** your net gain or loss for goalkeepers, defenders, midfielders and forwards, over the season and the last five gameweeks.
 - **Each player, across the season:** the total, split into what came from owning him and what came from captaining him.
 
+The script leads with `decisions`, which looks forward to spot gaps: (your starting share − the league's starting share) × the player's projected points over the next four gameweeks. It shows your biggest gap by position and the available players behind it, with price, fixtures and who they could replace. It's a rough estimate, so check it against team news. Past losses and costly benchings are included as context.
+
 Read season totals by position. Players in one position replace each other, so choosing Verbruggen over Raya shows up as a gain and a loss, but it's one decision. A negative number only means your rivals got more from that player than you did. All the numbers in a league add up to your gap to its average, before hits.
 
 ### Running it on a schedule

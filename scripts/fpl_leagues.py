@@ -21,6 +21,7 @@ import fpl_snapshot as snap
 DIFFERENTIAL_SHARE = 0.25
 RIVAL_ONLY_SHARE = 0.4
 RECENT_GAMEWEEKS = 5
+HORIZON = 4
 
 
 def member_history(src, entry, gaps):
@@ -104,7 +105,7 @@ def analyse_league(src, team_id, league, gws, live, by_id, boot, next_gw, top, g
         gaps.append(f"{league['name']}: only the top 50 managers were compared.")
     members = [r for r in standing["results"]]
     rivals = [r for r in members if r["entry"] != team_id]
-    impact, split, recent, gameweeks = {}, {}, {}, []
+    impact, split, recent, bench, gameweeks = {}, {}, {}, {}, []
     captaincy = 0.0
     recent_gws = set(gws[-RECENT_GAMEWEEKS:])
     for gw in gws:
@@ -130,6 +131,8 @@ def analyse_league(src, team_id, league, gws, live, by_id, boot, next_gw, top, g
             captaincy += armband
             if gw in recent_gws:
                 recent[pid] = recent.get(pid, 0.0) + value
+                if pid in mine and mine[pid] == 0 and value < 0:
+                    bench[pid] = bench.get(pid, 0.0) + value
         gameweeks.append(gameweek_row(gw, values, mine, others, points, by_id))
 
     history = {r["entry"]: member_history(src, r["entry"], gaps) for r in members}
@@ -144,6 +147,14 @@ def analyse_league(src, team_id, league, gws, live, by_id, boot, next_gw, top, g
         found = snap.locked_squad(src, r["entry"], next_gw - 1, snap.free_hit_weeks(h))
         if found:
             locked[r["entry"]] = found[1]["picks"]
+    starting_gap = {}
+    if team_id in locked and any(k != team_id for k in locked):
+        rival_lineups = [v for k, v in locked.items() if k != team_id]
+        my_starts = {p["element"]: min(p["multiplier"], 1) for p in locked[team_id]}
+        for pid in set(my_starts) | {p["element"] for s in rival_lineups for p in s}:
+            average = sum(min(next((p["multiplier"] for p in s if p["element"] == pid), 0), 1)
+                          for s in rival_lineups) / len(rival_lineups)
+            starting_gap[pid] = my_starts.get(pid, 0) - average
     mine_locked = {p["element"] for p in locked.get(team_id, [])}
     rival_squads = [v for k, v in locked.items() if k != team_id]
     owners, captains = {}, {}
@@ -170,7 +181,11 @@ def analyse_league(src, team_id, league, gws, live, by_id, boot, next_gw, top, g
                   for c in (history.get(team_id) or {}).get("current", []))
     rival_hits = [sum(c.get("event_transfers_cost", 0) for c in history[r["entry"]]["current"])
                   for r in rivals if history[r["entry"]] is not None]
+    positions = position_summary(impact, recent, by_id)
     return {
+        "_recent": recent,
+        "_bench": bench,
+        "_starting_gap": starting_gap,
         "league": league["name"],
         "id": league["id"],
         "managers": league.get("rank_count"),
@@ -183,7 +198,7 @@ def analyse_league(src, team_id, league, gws, live, by_id, boot, next_gw, top, g
         "hits_taken": my_hits,
         "avg_rival_hits": round(sum(rival_hits) / len(rival_hits), 1) if rival_hits else None,
         "by_gameweek": gameweeks,
-        "by_position": position_summary(impact, recent, by_id),
+        "by_position": positions,
         "best_picks": ranked(impact, split, by_id, top, True),
         "worst_picks": ranked(impact, split, by_id, top, False),
         "next_deadline": {
@@ -194,6 +209,89 @@ def analyse_league(src, team_id, league, gws, live, by_id, boot, next_gw, top, g
                                        sorted(captains.items(), key=lambda kv: -kv[1])[:3]],
             "managers_above_you": above,
         },
+    }
+
+
+def average_cost(tables, count):
+    totals = {}
+    for table in tables:
+        for pid, value in table.items():
+            totals[pid] = totals.get(pid, 0.0) + value
+    return {pid: value / count for pid, value in totals.items()}
+
+
+def replaceable(row, squad, bank, club_limit):
+    """Names of squad players one transfer could swap for this player."""
+    counts = {}
+    for s in squad:
+        counts[s["club"]] = counts.get(s["club"], 0) + 1
+    names = []
+    for s in squad:
+        if (s["pos"] == row["pos"] and s["selling_price"] is not None and bank is not None
+                and row["price"] <= round(bank + s["selling_price"], 1)
+                and (s["club"] == row["club"] or counts.get(row["club"], 0) < club_limit)):
+            names.append(s["name"])
+    return names
+
+
+def decisions(results, snapshot, boot, by_id, fixtures, top):
+    """Point to the gaps most likely to cost points over the coming gameweeks.
+
+    The lead measure is forward-looking: (your starting share - the league's
+    starting share) x the player's projected points. Past losses are context.
+    """
+    teams = {t["id"]: t["short_name"] for t in boot["teams"]}
+    last_gw = snapshot["next_gameweek"] - 1
+    final = max(ev["id"] for ev in boot["events"])
+    gws = [g for g in range(last_gw + 1, last_gw + HORIZON + 1) if g <= final]
+    count = len(results)
+    recent = average_cost([r["_recent"] for r in results], count)
+    bench = average_cost([r["_bench"] for r in results], count)
+    share_gap = average_cost([r["_starting_gap"] for r in results], count)
+    expected = {pid: gap * snap.projected_points(by_id[pid], gws, fixtures, last_gw)
+                for pid, gap in share_gap.items() if pid in by_id}
+    totals = {}
+    for pid, value in expected.items():
+        position = position_of(pid, by_id)
+        totals[position] = totals.get(position, 0.0) + value
+    focus = min(totals, key=totals.get)
+    squad = snapshot["squad"]
+    owned = {row["id"] for row in squad}
+    limit = boot.get("game_settings", {}).get("squad_team_limit", snap.DEFAULT_CLUB_LIMIT)
+
+    def threat(pid):
+        e = by_id[pid]
+        row = snap.player_row(e, teams, fixtures, gws, last_gw)
+        options = replaceable(row, squad, snapshot["bank"], limit)
+        return {"player": row["name"], "position": row["pos"], "club": row["club"],
+                "price": row["price"], "form": row["form"], "xgi_per_90": row["xgi_per_90"],
+                "fixtures": row["fixtures"],
+                "expected_gap_next_gws": round(expected[pid], 1),
+                "rivals_starting_pct": round(-share_gap[pid] * 100),
+                "avg_points_lost_per_league_last_5": round(recent.get(pid, 0.0), 1),
+                "affordable_with_one_transfer": bool(options), "can_replace": options}
+
+    open_gaps = [pid for pid in sorted(expected, key=expected.get)
+                 if pid not in owned and expected[pid] < 0 and by_id[pid]["status"] == "a"]
+    holding = sorted(((expected.get(r["id"], 0.0), r) for r in squad if r["pos"] == focus),
+                     key=lambda pair: pair[0])
+    return {
+        "basis": (f"Next {len(gws)} gameweeks, averaged across your compared leagues, using each "
+                  "manager's last public lineup. A rough estimate for spotting gaps."),
+        "expected_gap_by_position": [
+            {"position": position, "expected_gap_next_gws": round(value, 1)}
+            for position, value in sorted(totals.items(), key=lambda kv: kv[1])],
+        "focus_position": focus,
+        "biggest_gaps_any_position": [threat(p) for p in open_gaps[:top]],
+        "chase": [threat(p) for p in open_gaps if position_of(p, by_id) == focus][:top],
+        "your_players_in_focus_position": [
+            {"player": r["name"], "expected_edge_next_gws": round(v, 1), "form": r["form"],
+             "next_fixture": r["fixtures"][0] if r["fixtures"] else None}
+            for v, r in holding],
+        "costly_benchings": [
+            {"player": by_id[pid]["web_name"] if pid in by_id else f"id {pid}",
+             "avg_points_lost_per_league_last_5": round(value, 1)}
+            for pid, value in sorted(bench.items(), key=lambda kv: kv[1])[:3]],
     }
 
 
@@ -227,11 +325,21 @@ def build(args, src):
     results = [analyse_league(src, args.team_id, l, gws, live, by_id, boot, upcoming[0],
                               args.top, gaps) for l in leagues]
     results.sort(key=lambda r: r["points_vs_league_avg"], reverse=True)
+    forward = ["--team-id", str(args.team_id)]
+    if args.now:
+        forward += ["--now", args.now]
+    snapshot = snap.build_snapshot(snap.parse_args(forward), src)
+    actions = decisions(results, snapshot, boot, by_id, src.get("fixtures/"), args.top)
+    for result in results:
+        result.pop("_recent")
+        result.pop("_bench")
+        result.pop("_starting_gap")
     return {"finished_gameweeks": [gws[0], gws[-1]],
             "best_league": results[0]["league"],
             "worst_league": results[-1]["league"],
             "note": ("Impacts are before hits and add up to points_vs_league_avg. Don't read a "
                      "single player's season total alone: use by_position for the net effect."),
+            "decisions": actions,
             "leagues": results,
             "data_gaps": sorted(set(gaps)) or None}
 
