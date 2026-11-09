@@ -100,20 +100,34 @@ class LeagueData(unittest.TestCase):
         self.build()
         self.assertEqual(self.result()["leagues"][0]["captaincy_vs_league_avg"], 5.0)
 
-    def test_decisions_chase_the_weakest_position(self):
+    def test_gaps_are_facts_about_rival_lineups(self):
         self.build()
         actions = self.result()["decisions"]
-        self.assertEqual(actions["focus_position"], "FWD")
-        self.assertEqual([c["player"] for c in actions["chase"]], ["P2"])
-        self.assertEqual(actions["chase"][0]["expected_gap_next_gws"], -1.5)
-        self.assertEqual(actions["chase"][0]["rivals_starting_pct"], 50)
-        self.assertEqual(actions["chase"][0]["avg_points_lost_per_league_last_5"], -1.0)
-        self.assertFalse(actions["chase"][0]["affordable_with_one_transfer"])
+        gaps = actions["this_gameweek"]["rivals_start_you_dont"]
+        self.assertEqual({g["player"]: g["rivals_starting_pct"] for g in gaps}, {"P2": 50, "P3": 50})
+        self.assertNotIn("expected_gap_next_gws", gaps[0])
 
-    def test_benching_a_player_rivals_started_is_flagged(self):
+    def test_benched_player_rivals_start_is_flagged(self):
         self.build(mine={1: 2, 3: 0})
-        costly = self.result()["decisions"]["costly_benchings"]
-        self.assertEqual(costly, [{"player": "P3", "avg_points_lost_per_league_last_5": -2.0}])
+        benched = self.result()["decisions"]["this_gameweek"]["you_bench_rivals_start"]
+        self.assertEqual([b["player"] for b in benched], ["P3"])
+
+    def test_fixture_run_labels(self):
+        fixtures = [{"event": 2, "team_h": 1, "team_a": 2, "team_h_difficulty": 2, "team_a_difficulty": 5}]
+        self.assertEqual(fpl_leagues.fixture_run(1, [2], fixtures), ([2], "good run"))
+        self.assertEqual(fpl_leagues.fixture_run(2, [2], fixtures), ([5], "tough run"))
+        self.assertEqual(fpl_leagues.fixture_run(3, [2], fixtures), ([], "no fixtures"))
+
+    def test_after_deadline_swing_is_exact(self):
+        self.build()
+        out = run(fpl_leagues, "--team-id", str(TEAM), "--data-dir", self.dir, "--now", NOW,
+                  "--after-deadline")
+        self.assertEqual(out["gameweek"], 1)
+        league = out["leagues"][0]
+        self.assertEqual(league["want_to_score"][0]["player"], "P1")
+        self.assertEqual(league["want_to_score"][0]["swing_per_point"], 1.0)
+        self.assertEqual({r["player"]: r["swing_per_point"] for r in league["want_to_blank"]},
+                         {"P2": -0.5, "P3": -0.5})
 
     def test_big_private_leagues_are_skipped(self):
         self.build()
@@ -148,6 +162,12 @@ class Daily(unittest.TestCase):
 
     def test_no_brief_right_before_the_deadline(self):
         self.assertFalse(self.check(Scenario(), "2026-03-10T08:00:00Z")["write_brief_today"])
+
+    def test_after_deadline_view_due_on_first_run_after_deadline(self):
+        self.assertTrue(self.check(Scenario(), "2026-02-09T19:00:00Z")["after_deadline_view_due"])
+
+    def test_after_deadline_view_not_due_later(self):
+        self.assertFalse(self.check(Scenario(), "2026-02-11T19:00:00Z")["after_deadline_view_due"])
 
     def test_falling_squad_player_alerts_when_it_costs_money(self):
         s = Scenario()
