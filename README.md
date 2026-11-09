@@ -64,6 +64,15 @@ Useful options:
 | `--min-minutes 450` | Leaves out candidates with fewer season minutes than this, so one big game doesn't top the list |
 | `--data-dir DIR` | Reads saved JSON files instead of the live API, for offline testing |
 
+## Mini-leagues and daily checks
+
+```bash
+python3 scripts/fpl_leagues.py --team-id 1234567   # how your picks did against each small private league
+python3 scripts/fpl_daily.py --team-id 1234567     # is a brief due today, and any price moves to act on tonight
+```
+
+`fpl_leagues.py` shows the players who gained or lost you the most against each league's average, plus rival ownership, captains and chips. It makes about one request per rival per gameweek, so it only covers private leagues of up to 30 managers unless you name one with `--league`.
+
 ## Other agents
 
 The skill uses the open Agent Skills layout: a folder containing a `SKILL.md`. Agents that support the same format can load it from wherever they keep skills.

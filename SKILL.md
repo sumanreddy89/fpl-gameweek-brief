@@ -50,7 +50,8 @@ Work through these in order.
 3. **Captain and vice-captain.** Give one pick each and one alternative. Weigh fixture, form, `set_pieces` (`penalties: 1` means first choice), recent minutes and FPL's `ep_next`. The vice-captain should be someone who is very likely to start.
 4. **Starting XI and bench.** Choose a valid formation (1 GK, 3–5 DEF, 2–5 MID, 1–3 FWD). Order the bench by who is most likely to be needed and to score, so that each substitute can legally replace the starters most likely to miss out.
 5. **Chips.** Say which chips are still available in this half-season window, and whether this gameweek is a good time for one. Bench Boost and Triple Captain suit double gameweeks, and Free Hit suits blanks. Most weeks the answer is to hold.
-6. **Price watch.** Name the players being heavily bought or sold, among the squad and the targets.
+6. **Price watch.** Use `price_outlook` for the squad and the targets. A `projected_next_update_pct` of 100 or more (or −100 or less) means FPL expects a change at the next 00:00 UK update, though it's a guide and not a guarantee.
+7. **Mini-leagues.** If the manager wants league insight, run `python3 scripts/fpl_leagues.py --team-id <ID>`. Report the league where their picks did best and worst, the top gains and losses, then which players and captains to watch before the deadline. `points_vs_league_avg` is before hits. Rival team names are private to the manager, so don't put them anywhere public.
 
 Also look at both sides of any match where the squad has players on both teams, or several defenders on one team. Correlated outcomes are worth one line.
 
@@ -70,6 +71,10 @@ Keep it short enough to read on a phone. Use these sections, in this order:
 Label your confidence honestly. Say which calls are strong and which are close to a coin flip, and name any player you couldn't get data for. End with an invitation to reply with what they want to go with.
 
 If the environment can publish a page or document, deliver the brief that way. Otherwise reply with it directly.
+
+## Daily check
+
+`python3 scripts/fpl_daily.py --team-id <ID>` is cheap to run every evening. `write_brief_today` is true on the last evening at least 6 hours before the deadline. `price_alerts` lists only moves the manager can act on before tonight's update: a squad player whose fall would cut their selling price, or a top transfer target about to rise. If there are no alerts and no brief is due, stay silent.
 
 ## Limits
 

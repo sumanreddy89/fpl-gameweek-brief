@@ -176,6 +176,21 @@ def set_pieces(e):
     return {k: v for k, v in roles.items() if v} or None
 
 
+def price_outlook(e):
+    """FPL's own predictor: progress towards the next price change, or None.
+
+    Percentages are positive towards a rise and negative towards a fall. FPL
+    expects a change at the next 00:00 UK update when the size reaches 100.
+    """
+    progress = number(e, "price_change_percent")
+    projections = e.get("price_change_projections") or []
+    projected = number(projections[0], "projected_percent") if projections else None
+    if progress is None and projected is None:
+        return None
+    return {"progress_pct": progress, "projected_next_update_pct": projected,
+            "locked_until": e.get("price_change_locked_until")}
+
+
 def player_row(e, teams, fixtures, gws, last_gw):
     return {
         "id": e["id"],
@@ -201,6 +216,7 @@ def player_row(e, teams, fixtures, gws, last_gw):
         "owned_pct": float(e["selected_by_percent"]),
         "transfers_in_gw": e["transfers_in_event"],
         "transfers_out_gw": e["transfers_out_event"],
+        "price_outlook": price_outlook(e),
         "fixtures": fixtures_for(e["team"], gws, fixtures, teams),
     }
 
@@ -441,6 +457,7 @@ def build_snapshot(args, src):
         transfers = None
         data_gaps.append("Transfer log unavailable, so selling prices are unknown.")
     selling = {}
+    bought = {}
     if transfers is not None and (locked or not args.squad):
         ids = list(set(order) | sold_ids)
         bought = purchase_prices(ids, new_ids, by_id, transfers, fh_weeks)
@@ -483,6 +500,8 @@ def build_snapshot(args, src):
         row["role"] = ("captain" if pid == captain else
                        "vice" if pid == vice else None)
         row["selling_price"] = selling[pid] / 10 if pid in selling else None
+        row["selling_price_after_fall"] = (
+            selling_price(bought[pid], by_id[pid]["now_cost"] - 1) / 10 if pid in bought else None)
         try:
             row["recent"] = recent_matches(src.get(f"element-summary/{pid}/"))
         except FetchError:
