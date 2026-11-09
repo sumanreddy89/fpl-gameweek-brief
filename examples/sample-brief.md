@@ -56,4 +56,3 @@ Adeyemi is being heavily bought, so he may rise before the deadline. Marlow is b
 
 **Couldn't confirm:** the reason for Ostrowski's reduced minutes.
 
-Tell me which moves you want to go with.
