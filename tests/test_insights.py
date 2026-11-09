@@ -12,7 +12,7 @@ import unittest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 import fpl_daily  # noqa: E402
 import fpl_leagues  # noqa: E402
-from test_snapshot import NOW, TEAM, Scenario  # noqa: E402
+from test_snapshot import NOW, TEAM, Scenario, player  # noqa: E402
 
 
 def run(module, *argv):
@@ -37,11 +37,12 @@ class LeagueData(unittest.TestCase):
                            "is_captain": m == 2, "is_vice_captain": False}
                           for i, (p, m) in enumerate(multipliers.items(), 1)]}
 
-    def build(self, chips=None):
+    def build(self, chips=None, mine=None):
         kinds = {1: 1, 2: 4, 3: 1}
-        names = {i: {"id": i, "web_name": f"P{i}", "element_type": kinds[i]} for i in kinds}
+        names = {i: player(i, kinds[i], i, web_name=f"P{i}") for i in kinds}
         self.save("bootstrap-static", {
             "elements": list(names.values()),
+            "teams": [{"id": t, "short_name": f"T{t}"} for t in (1, 2, 3)],
             "events": [{"id": 1, "finished": True, "deadline_time": "2026-01-01T11:00:00Z"},
                        {"id": 2, "finished": False, "deadline_time": "2026-04-01T11:00:00Z"}],
             "chips": [{"name": "bboost", "start_event": 1, "stop_event": 19}]})
@@ -57,10 +58,13 @@ class LeagueData(unittest.TestCase):
             {"id": 1, "stats": {"total_points": 10}},
             {"id": 2, "stats": {"total_points": 2}},
             {"id": 3, "stats": {"total_points": 4}}]})
-        for entry, squad in ((TEAM, {1: 2}), (200, {1: 2, 3: 1}), (300, {2: 1})):
+        self.save("fixtures", [])
+        self.save(f"entry_{TEAM}_transfers", [])
+        for entry, squad in ((TEAM, mine or {1: 2}), (200, {1: 2, 3: 1}), (300, {2: 1})):
             self.save(f"entry_{entry}_event_1_picks", self.picks(squad))
             self.save(f"entry_{entry}_history", {
-                "current": [{"event_transfers_cost": 4 if entry == TEAM else 0}],
+                "current": [{"event": 1, "event_transfers": 0,
+                             "event_transfers_cost": 4 if entry == TEAM else 0}],
                 "chips": chips.get(entry, []) if chips else []})
 
     def result(self):
@@ -95,6 +99,21 @@ class LeagueData(unittest.TestCase):
     def test_captaincy_is_split_out(self):
         self.build()
         self.assertEqual(self.result()["leagues"][0]["captaincy_vs_league_avg"], 5.0)
+
+    def test_decisions_chase_the_weakest_position(self):
+        self.build()
+        actions = self.result()["decisions"]
+        self.assertEqual(actions["focus_position"], "FWD")
+        self.assertEqual([c["player"] for c in actions["chase"]], ["P2"])
+        self.assertEqual(actions["chase"][0]["expected_gap_next_gws"], -1.5)
+        self.assertEqual(actions["chase"][0]["rivals_starting_pct"], 50)
+        self.assertEqual(actions["chase"][0]["avg_points_lost_per_league_last_5"], -1.0)
+        self.assertFalse(actions["chase"][0]["affordable_with_one_transfer"])
+
+    def test_benching_a_player_rivals_started_is_flagged(self):
+        self.build(mine={1: 2, 3: 0})
+        costly = self.result()["decisions"]["costly_benchings"]
+        self.assertEqual(costly, [{"player": "P3", "avg_points_lost_per_league_last_5": -2.0}])
 
     def test_big_private_leagues_are_skipped(self):
         self.build()
