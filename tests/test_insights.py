@@ -38,7 +38,8 @@ class LeagueData(unittest.TestCase):
                           for i, (p, m) in enumerate(multipliers.items(), 1)]}
 
     def build(self, chips=None):
-        names = {i: {"id": i, "web_name": f"P{i}"} for i in (1, 2, 3)}
+        kinds = {1: 1, 2: 4, 3: 1}
+        names = {i: {"id": i, "web_name": f"P{i}", "element_type": kinds[i]} for i in kinds}
         self.save("bootstrap-static", {
             "elements": list(names.values()),
             "events": [{"id": 1, "finished": True, "deadline_time": "2026-01-01T11:00:00Z"},
@@ -70,7 +71,26 @@ class LeagueData(unittest.TestCase):
         league = self.result()["leagues"][0]
         # Me 20. Rivals 24 and 2, average 13.
         self.assertEqual(league["points_vs_league_avg"], 7.0)
-        self.assertEqual(league["best_picks"], [{"player": "P1", "points": 10.0}])
+        self.assertEqual(league["best_picks"], [{"player": "P1", "points": 10.0,
+                                                 "from_ownership": 5.0, "from_captaincy": 5.0}])
+
+    def test_each_gameweek_names_its_biggest_swings(self):
+        self.build()
+        row = self.result()["leagues"][0]["by_gameweek"][0]
+        self.assertEqual((row["gw"], row["vs_league_avg"]), (1, 7.0))
+        self.assertEqual(row["biggest_upside"], {
+            "player": "P1", "position": "GK", "points": 10.0, "your_multiplier": 2,
+            "league_avg_multiplier": 1.0, "player_points": 10})
+        self.assertEqual(row["biggest_downside"]["player"], "P3")
+        self.assertEqual(row["biggest_downside"]["points"], -2.0)
+
+    def test_positions_net_out_players_who_replace_each_other(self):
+        self.build()
+        positions = {p["position"]: p for p in self.result()["leagues"][0]["by_position"]}
+        self.assertEqual(positions["GK"]["net"], 8.0)
+        self.assertEqual(positions["GK"]["biggest_gain"], {"player": "P1", "points": 10.0})
+        self.assertEqual(positions["GK"]["biggest_loss"], {"player": "P3", "points": -2.0})
+        self.assertEqual(positions["FWD"]["net"], -1.0)
 
     def test_captaincy_is_split_out(self):
         self.build()
