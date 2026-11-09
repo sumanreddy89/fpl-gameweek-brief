@@ -1,105 +1,111 @@
 # Sample brief
 
-*Illustrative only. The players, clubs, numbers and sources below are invented to show the format. A real brief uses live FPL data and dated team news.*
+*A real example using public FPL data from 9 November 2026, ahead of Gameweek 11. Mini-league names are hidden. This snapshot leaves out press-conference news, which a live brief adds with dated sources. It isn't current advice.*
 
-**Deadline:** Saturday 11:00 UK time (41 hours away)
-**GW10:** 512 points, rank 214,000, £0.9m in the bank, 2 free transfers (estimate, check your Transfers screen)
-**Squad source:** public picks locked at the GW9 deadline
+**Deadline:** Saturday 21 November, 11:00 UK time
+**GW11:** 635 points, rank 1.32m, £2.5m in the bank, 2 free transfers (estimate, check your Transfers screen)
+**Squad source:** public picks locked at the GW10 deadline
 
 ## Squad flags
-- **Marlow (DEF, RIV): out.** Hamstring, expected back in about three weeks. *Confirmed by the club, Thursday.*
-- **Teague (MID, HAR): 75%.** Trained on Thursday after a knock. *Manager's press conference, Friday.*
-- **Ostrowski (FWD, VAL): minutes falling.** 90, 88, 85, then 24 and 31. No injury reported. Local reports of a change of system are *speculation*.
+- **Gvardiol (DEF, Man City): 75%.** Unspecified injury, according to FPL. Form 1.4.
+- **Cherki (MID, Man City): rotation.** Last five games: 90, 0, 45, 35 and 90 minutes.
+
+No blank or double gameweeks in the next four.
 
 ## Transfers
-**Recommendation: Marlow → Adeyemi. Strong call.**
+**Recommendation: Calvert-Lewin → N.Jackson. Fairly strong call.**
 
-| Out | In | Bank after | Why |
+| Out | In | Bank after | Next game |
 |---|---|---|---|
-| Marlow (£5.1m, sells £5.0m) | Adeyemi (£5.3m, BRK) | £0.6m | Starts every game, takes corners, and BRK's next three fixtures are all difficulty 2 |
-| Marlow (£5.1m, sells £5.0m) | Hollis (£4.8m, DUN) | £1.1m | Cheaper, and sets up an upgrade next week. Harder fixtures |
+| Calvert-Lewin (sells £6.0m) | N.Jackson (£7.1m, Aston Villa) | £1.4m | Sunderland (H), difficulty 2 |
+| Cherki (sells £7.8m) | Tavernier (£6.7m, Bournemouth) | £3.6m | Nott'm Forest (H), difficulty 3 |
 
-Use the other free transfer or roll it? **Roll it** to have 2 next week. Ostrowski is worth one more match before moving on. No hit needed.
+Jackson has form of 8.8 and a home game rated 2, while Calvert-Lewin goes to Chelsea and later Man City. Leave the second transfer until team news settles Cherki and Gvardiol. Cherki to Tavernier is close to a coin flip. No hit needed.
 
 ## Captain
-- **Captain: Reyes** (VAL v DUN, difficulty 2). First-choice penalty taker, best xGI in the squad. Clear pick.
-- **Vice: Teixeira** (HAR). Very likely to start.
-- **Alternative: Ibarra** (RIV). Close to a coin flip with Reyes if you want a differential.
+- **Captain: Haaland** (Man City v Fulham, difficulty 2). First-choice penalties, 0.80 expected goal involvements per 90. Clear pick.
+- **Vice: Konsa** (Arsenal). Played 90 minutes in each of his last five games.
+- **Alternative: Evanilson** (Bournemouth v Nott'm Forest, difficulty 3). Form 9.0.
 
-## Starting XI (3-5-2)
+## Starting XI (3-4-3)
 | Player | Club | Fixture | Form |
 |---|---|---|---|
-| Lindqvist | HAR | CAS (H) 3 | 4.2 |
-| Adeyemi | BRK | SOL (A) 2 | 5.1 |
-| Danso | VAL | DUN (H) 2 | 4.8 |
-| Pryce | RIV | ELM (A) 4 | 3.9 |
-| Reyes (C) | VAL | DUN (H) 2 | 8.4 |
-| Teixeira (V) | HAR | CAS (H) 3 | 6.6 |
-| Teague | HAR | CAS (H) 3 | 5.0 |
-| Ibarra | RIV | ELM (A) 4 | 7.1 |
-| Nowak | BRK | SOL (A) 2 | 4.4 |
-| Okoro | CAS | HAR (A) 3 | 6.0 |
-| Vance | ELM | RIV (H) 2 | 5.5 |
+| Verbruggen | Brighton | HUL (A) 2 | 6.2 |
+| Konsa (V) | Arsenal | NEW (A) 3 | 10.2 |
+| De Cuyper | Brighton | HUL (A) 2 | 5.5 |
+| Calafiori | Arsenal | NEW (A) 3 | 4.8 |
+| Ødegaard | Arsenal | NEW (A) 3 | 5.0 |
+| Groß | Brighton | HUL (A) 2 | 4.2 |
+| Barcola | Liverpool | MUN (H) 3 | 3.6 |
+| Rogers | Chelsea | LEE (H) 3 | 3.5 |
+| Haaland (C) | Man City | FUL (H) 2 | 6.2 |
+| Evanilson | Bournemouth | NFO (H) 3 | 9.0 |
+| N.Jackson | Aston Villa | SUN (H) 2 | 8.8 |
 
-**Bench:** Fenn (GK), 1. Ostrowski, 2. Hale (DEF), 3. Quint (DEF). Ostrowski goes first because Teague is the starter most likely to miss out, and 3-4-3 is a valid formation.
+**Bench:** Kinsky (GK), 1. Cherki, 2. Gvardiol, 3. Egan.
 
 ## Chips
-Wildcard, Free Hit, Bench Boost and Triple Captain are all available in this window. No double or blank gameweek in the next four. **Hold.**
+Free Hit, Bench Boost and Triple Captain are available. Wildcard was played in GW3. No double or blank gameweek in the next four. **Hold.**
 
 ## Price watch
 FPL's predictor is a guide, and 100% means a change is expected at midnight UK time.
 
 | Player | Progress | Why it matters |
 |---|---|---|
-| Adeyemi | +97% | Suggested transfer, so he may rise before you buy |
-| Marlow | −88% | Suggested sale, and a fall would cut his selling price |
+| Verbruggen | +99.6% | In the squad |
+| Dewsbury-Hall | +99.0% | Transfer target list |
+| N.Jackson | +49.0% | Suggested transfer |
+| Cherki | −60.1% | Possible sale |
+| Egan | −49.4% | On the bench |
 
 ## Where rivals have an edge
-*Facts from rivals' last lineups, averaged across your leagues. They can still change their teams.*
+*Facts from rivals' last lineups, averaged across five mini-leagues. They can still change their teams.*
 
 **This gameweek: rivals start them, you don't**
 
 | Player | Rivals starting | Next | Form |
 |---|---|---|---|
-| Thorne (MID, BRK) | 62% | SOL (A) 2 | 7.4 |
-| Mbala (FWD, DUN) | 48% | VAL (A) 4 | 5.9 |
+| N.Jackson (FWD, Aston Villa) | 61% | SUN (H) 2 | 8.8 |
+| Tavernier (MID, Bournemouth) | 61% | NFO (H) 3 | 6.5 |
+| Raya (GK, Arsenal) | 44% | NEW (A) 3 | 6.8 |
+| Isak (FWD, Liverpool) | 30% | MUN (H) 3 | 5.6 |
+| Palmer (MID, Chelsea) | 59% | LEE (H) 3 | 2.8 |
 
-**On your bench, but rivals start them:** Quint (DEF), 55% of rivals.
-**Your differentials:** Ibarra (8% of rivals), Teague (12%).
-**Rival captains:** Reyes 71%, Okoro 14%.
+**On your bench, but rivals start them:** Groß 61%, Verbruggen 32%, Calvert-Lewin 25%.
+**Your differentials:** Barcola (0% of rivals), Ødegaard (9%), Kinsky (14%), Cherki (14%).
+**Rival captains:** Haaland 68%, Isak 10%, Palmer 7%.
 
 **Transfers: fixtures for the next 4**
 
 | Player | Rivals starting | Fixtures | Run | Can you act? |
 |---|---|---|---|---|
-| Thorne £6.4m | 62% | 2, 2, 3, 2 | Good | Yes, for Nowak |
-| Mbala £7.5m | 48% | 4, 3, 4, 3 | Tough | Yes, for Vance |
+| Tavernier £6.7m | 61% | 3, 3, 4, 2 | Mixed | Yes, a midfield swap |
+| N.Jackson £7.1m | 61% | 2, 2, 3, 2 | Good | Yes, for Calvert-Lewin |
+| Palmer £9.8m | 59% | 3, 2, 2, 4 | Mixed | Yes, a midfield swap |
+| Raya £6.2m | 44% | 3, 4, 4, 3 | Tough | No, Arsenal is full |
+| Isak £9.3m | 30% | 3, 3, 2, 4 | Mixed | Only for Haaland |
 
 ## Mini-leagues
 *Your picks against each league's average, before hits.*
 
-**Gameweek 9: who swung it**
+**Gameweek 10: who swung it**
 
-| League | GW9 | Biggest upside | Biggest downside |
+| League | GW10 | Biggest upside | Biggest downside |
 |---|---|---|---|
-| Office League | +6.2 | Ibarra +8.5 | Thorne −4.3 |
-| Family Cup | −3.1 | Teague +3.6 | Mbala −6.0 |
+| League A | +16.7 | Ødegaard +11.0 | Isak −8.0 |
+| League B | −2.7 | Ødegaard +9.9 | Groß −9.0 |
 
 **Where you stand, by position**
 
 | League | Rank | Total | Last 5 | GK | DEF | MID | FWD |
 |---|---|---|---|---|---|---|---|
-| Office League | 2 / 12 | +31.0 | +12.4 | +2.0 | +18.5 | +14.1 | −3.6 |
-| Family Cup | 6 / 9 | −14.5 | −9.2 | −1.0 | +3.5 | −20.2 | +3.2 |
+| League A | 1 / 4 | +69.7 | +52.3 | +4.0 | +63.7 | −12.0 | +14.0 |
+| League B | 7 / 11 | −28.5 | −21.6 | −4.1 | +11.4 | −41.9 | +6.1 |
 
-Midfield is costing you in Family Cup. Thorne is the player most rivals there have and you don't.
+Midfield is the weakest position in both leagues, and defence is the strongest.
 
 ## Sources
-- FPL API, today
-- RIV club injury update, Thursday
-- HAR press conference, Friday
-
-**Couldn't confirm:** the reason for Ostrowski's reduced minutes.
+- FPL public data, 9 November 2026
 
 Reply with what you want to go with, and I'll help make the changes.
 
@@ -109,13 +115,15 @@ Reply with what you want to go with, and I'll help make the changes.
 
 *Sent separately on the first evening after each deadline, once every lineup is public. Some matches may already have been played.*
 
-**Family Cup, Gameweek 10**
+**League B, Gameweek 10**
 
-| Player | Each point moves you | Rivals starting | Rivals captaining |
+| Player | Each point moves you | Rivals starting | Points scored |
 |---|---|---|---|
-| Ibarra | +0.89 | 11% | 0% |
-| Teague | +0.78 | 22% | 0% |
-| Thorne | −0.78 | 78% | 11% |
-| Mbala | −0.56 | 56% | 0% |
+| Barcola | +1.00 | 0% | 5 |
+| Cherki | +0.90 | 10% | 9 |
+| Ødegaard | +0.90 | 10% | 11 |
+| Palmer | −0.90 | 80% | 2 |
+| Groß | −0.90 | 90% | 10 |
+| Raya | −0.70 | 70% | 6 |
 
-Plus means you want him to score, and minus means you want him to blank. These numbers are exact, because the lineups are locked. One rival played Bench Boost.
+Plus means you want him to score, and minus means you want him to blank. These numbers are exact, because the lineups are locked.
