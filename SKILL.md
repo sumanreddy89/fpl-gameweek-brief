@@ -84,6 +84,4 @@ If the environment can publish a page or document, deliver the brief that way. O
 
 ## Scheduling (optional)
 
-To get the brief before every gameweek, schedule one run for 24 hours before the next deadline. At the end of each run, schedule the following one, so the chain follows irregular midweek rounds and rescheduled fixtures. Each run should do two things:
-- Check the deadline again first, and reschedule itself if the deadline has moved.
-- Schedule the next run before writing the brief, so a failed brief doesn't break the chain. The brief should also say when the next one is due.
+To get the brief automatically, use one recurring routine that runs once every evening and calls the daily check above. Write the brief only when `write_brief_today` is true. Don't have a run create the next run: unattended runs stop for approval when they create a task, which can hold up the brief for hours.
