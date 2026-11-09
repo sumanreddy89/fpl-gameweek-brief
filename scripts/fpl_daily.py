@@ -8,12 +8,14 @@ changes the manager can act on before the next 00:00 UK update.
 import argparse
 import json
 import sys
+from datetime import datetime, timezone
 
 import fpl_snapshot as snap
 
 # Run once a day, so exactly one run lands in any 24-hour window.
 BRIEF_MIN_HOURS = 6
 BRIEF_MAX_HOURS = 30
+AFTER_DEADLINE_HOURS = 24
 # FPL expects a change at 100. Slightly lower catches players a late surge tips over.
 ALERT_PCT = 95
 TARGETS_PER_POSITION = 3
@@ -45,6 +47,16 @@ def price_alerts(snapshot):
     return alerts
 
 
+def after_deadline_due(boot, now_text):
+    """True on the first daily run after a deadline, once lineups are public."""
+    now = (datetime.fromisoformat(now_text.replace("Z", "+00:00")) if now_text
+           else datetime.now(timezone.utc))
+    past = [datetime.fromisoformat(ev["deadline_time"].replace("Z", "+00:00"))
+            for ev in boot["events"]]
+    past = [d for d in past if d <= now]
+    return bool(past) and (now - max(past)).total_seconds() / 3600 <= AFTER_DEADLINE_HOURS
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--team-id", type=int, required=True)
@@ -57,7 +69,8 @@ def main(argv=None):
         if value:
             forward += [flag, value]
     try:
-        snapshot = snap.build_snapshot(snap.parse_args(forward), snap.Source(args.data_dir))
+        source = snap.Source(args.data_dir)
+        snapshot = snap.build_snapshot(snap.parse_args(forward), source)
     except snap.FetchError as e:
         raise SystemExit(str(e)) from None
     if snapshot.get("season_over"):
@@ -68,6 +81,7 @@ def main(argv=None):
                "deadline_utc": snapshot["deadline_utc"],
                "hours_to_deadline": hours,
                "write_brief_today": BRIEF_MIN_HOURS <= hours < BRIEF_MAX_HOURS,
+               "after_deadline_view_due": after_deadline_due(source.get("bootstrap-static/"), args.now),
                "price_alerts": price_alerts(snapshot),
                "squad_source": snapshot["squad_source"],
                "data_gaps": snapshot["data_gaps"]}
