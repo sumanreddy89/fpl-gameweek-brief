@@ -26,7 +26,8 @@ Every brief includes:
 - **Captain and vice-captain picks,** with one alternative
 - **A starting XI and bench order** that works with the auto-sub rules
 - **Chip timing and a price-change watch,** using FPL's own price predictor
-- **Mini-league insight:** which player picks gained or lost you the most in each small private league, and what your rivals own
+- **Mini-league insight:** who your rivals start and you don't, your differentials, and which players swung each gameweek in your small private leagues
+- **An after-deadline note,** when run on a schedule: who you want to score and to blank in each league
 
 The skill only recommends. It never signs in to FPL or changes your team.
 
@@ -41,7 +42,7 @@ fpl-gameweek-brief/
 │   └── example-brief.png    # the example above
 ├── scripts/                 # Python 3, standard library only
 │   ├── fpl_snapshot.py      # pulls and trims the public FPL data
-│   ├── fpl_daily.py         # says if a brief is due and flags price moves
+│   ├── fpl_daily.py         # says if a brief or note is due and flags price moves
 │   └── fpl_leagues.py       # compares your picks with your mini-leagues
 ├── tests/                   # offline tests on invented data
 └── examples/
@@ -73,7 +74,7 @@ python3 scripts/fpl_leagues.py --team-id 1234567   # how your picks did against 
 python3 scripts/fpl_daily.py --team-id 1234567     # is a brief due today, and any price moves to act on tonight
 ```
 
-`fpl_leagues.py` shows the players who gained or lost you the most against each league's average, plus rival ownership, captains and chips. It makes about one request per rival per gameweek, so it only covers private leagues of up to 30 managers unless you name one with `--league`. A full season can take a couple of minutes.
+`fpl_leagues.py` shows where your rivals have an edge, the players who swung each gameweek, and your net gain or loss by position, plus rival captains and chips. It makes about one request per rival per gameweek, so it only covers private leagues of up to 30 managers unless you name one with `--league`. A full season can take a couple of minutes.
 
 ### Reading the mini-league numbers
 
@@ -96,7 +97,7 @@ Read season totals by position. Players in one position replace each other, so c
 
 ### Running it on a schedule
 
-Use one recurring task that runs every evening and calls `fpl_daily.py`. It says whether a brief is due and lists any price moves worth acting on. Avoid having each run schedule the next one, because unattended runs can stop for approval when they create a task.
+Use one recurring task that runs every evening and calls `fpl_daily.py`. It says whether a brief or after-deadline note is due and lists any price moves worth acting on. Avoid having each run schedule the next one, because unattended runs can stop for approval when they create a task.
 
 For a cloud task, attach this repository so each run uses the latest scripts, and add `fantasy.premierleague.com` to your allowed domains. A skill uploaded to your Claude account may include only `SKILL.md`, so don't rely on it for the scripts.
 
