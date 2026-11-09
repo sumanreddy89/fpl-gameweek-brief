@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/33878530/README.md)
 # FPL Gameweek Brief
 
 A Claude skill that preps your Fantasy Premier League team before every deadline. Give it your team ID and it tells you who's injured, who to bring in, who to captain and who to bench.
@@ -26,7 +25,8 @@ Every brief includes:
 - **Transfer options:** one to three moves that fit your bank and free transfers, plus whether to roll or take a hit
 - **Captain and vice-captain picks,** with one alternative
 - **A starting XI and bench order** that works with the auto-sub rules
-- **Chip timing and a price-change watch**
+- **Chip timing and a price-change watch,** using FPL's own price predictor
+- **Mini-league insight:** which player picks gained or lost you the most in each small private league, and what your rivals own
 
 The skill only recommends. It never signs in to FPL or changes your team.
 
@@ -39,14 +39,16 @@ fpl-gameweek-brief/
 ├── SKILL.md                 # instructions the agent follows
 ├── docs/
 │   └── example-brief.png    # the example above
-├── scripts/
-│   └── fpl_snapshot.py      # pulls and trims the public FPL data (Python 3, standard library only)
+├── scripts/                 # Python 3, standard library only
+│   ├── fpl_snapshot.py      # pulls and trims the public FPL data
+│   ├── fpl_daily.py         # says if a brief is due and flags price moves
+│   └── fpl_leagues.py       # compares your picks with your mini-leagues
 ├── tests/                   # offline tests on invented data
 └── examples/
     └── sample-brief.md      # what a finished brief looks like
 ```
 
-`fpl_snapshot.py` exists because FPL's main data file is several megabytes, which is too big for most agents to read whole. The script cuts it down to about 35 KB: your squad with recent minutes, set-piece roles and estimated selling prices, fixtures, chips, an estimate of your free transfers, blank and double gameweeks, and the best transfer candidates you can afford in each position, ranked over the coming fixtures.
+`fpl_snapshot.py` exists because FPL's main data file is several megabytes, which is too big for most agents to read whole. The script cuts it down to about 40 KB: your squad with recent minutes, set-piece roles and estimated selling prices, fixtures, chips, an estimate of your free transfers, blank and double gameweeks, and the best transfer candidates you can afford in each position, ranked over the coming fixtures.
 
 ```bash
 python3 scripts/fpl_snapshot.py --team-id 1234567
@@ -71,7 +73,24 @@ python3 scripts/fpl_leagues.py --team-id 1234567   # how your picks did against 
 python3 scripts/fpl_daily.py --team-id 1234567     # is a brief due today, and any price moves to act on tonight
 ```
 
-`fpl_leagues.py` shows the players who gained or lost you the most against each league's average, plus rival ownership, captains and chips. It makes about one request per rival per gameweek, so it only covers private leagues of up to 30 managers unless you name one with `--league`.
+`fpl_leagues.py` shows the players who gained or lost you the most against each league's average, plus rival ownership, captains and chips. It makes about one request per rival per gameweek, so it only covers private leagues of up to 30 managers unless you name one with `--league`. A full season can take a couple of minutes.
+
+### Reading the pick numbers
+
+A figure like **Haaland +34** or **Raya −29** means that player gained or cost you that many points against the average manager in that league, added up over the season so far.
+
+For each gameweek: (your multiplier − the league's average multiplier) × the player's points. A multiplier is 0 if he's not in your starting XI, 1 if he starts, 2 as captain and 3 with Triple Captain.
+
+- You captain a player who scores 10, and the league's average multiplier for him is 1.2: (2 − 1.2) × 10 = **+8**.
+- You don't own a player who scores 6, and the league's average multiplier for him is 0.7: (0 − 0.7) × 6 = **−4.2**.
+
+A negative number doesn't mean the player is bad. It means your rivals got more from him than you did. All the numbers in a league add up to your gap to that league's average, before hits.
+
+### Running it on a schedule
+
+Use one recurring task that runs every evening and calls `fpl_daily.py`. It says whether a brief is due and lists any price moves worth acting on. Avoid having each run schedule the next one, because unattended runs can stop for approval when they create a task.
+
+For a cloud task, attach this repository so each run uses the latest scripts, and add `fantasy.premierleague.com` to your allowed domains. A skill uploaded to your Claude account may include only `SKILL.md`, so don't rely on it for the scripts.
 
 ## Other agents
 
@@ -82,7 +101,8 @@ The skill uses the open Agent Skills layout: a folder containing a `SKILL.md`. A
 - **Recent transfers aren't visible.** FPL only publishes a squad after each deadline, so transfers made since the last one won't appear. Tell the agent your current 15 players, or share a screenshot of your Pick Team screen.
 - **Free transfers are an estimate,** based on the current rules (+1 each gameweek, a maximum of 5, and none used on Wildcard or Free Hit weeks). Check the number in the app.
 - **Selling prices are an estimate,** worked out from your public transfer log. Check the app if a move is tight on budget.
-- **Some sandboxes block the FPL site.** The skill falls back to a browser tool or to smaller endpoints when that happens.
+- **Some sandboxes block the FPL site.** The skill falls back to a browser tool or to smaller endpoints when that happens. Price alerts and mini-league analysis need the scripts to reach the site.
+- **Price predictions are a guide.** FPL's predictor doesn't guarantee a price change.
 
 ## Tests
 
