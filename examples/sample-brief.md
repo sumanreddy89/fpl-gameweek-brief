@@ -47,7 +47,52 @@ Use the other free transfer or roll it? **Roll it** to have 2 next week. Ostrows
 Wildcard, Free Hit, Bench Boost and Triple Captain are all available in this window. No double or blank gameweek in the next four. **Hold.**
 
 ## Price watch
-Adeyemi is being heavily bought, so he may rise before the deadline. Marlow is being heavily sold, so moving early protects his £5.0m sale price.
+FPL's predictor is a guide, and 100% means a change is expected at midnight UK time.
+
+| Player | Progress | Why it matters |
+|---|---|---|
+| Adeyemi | +97% | Suggested transfer, so he may rise before you buy |
+| Marlow | −88% | Suggested sale, and a fall would cut his selling price |
+
+## Where rivals have an edge
+*Facts from rivals' last lineups, averaged across your leagues. They can still change their teams.*
+
+**This gameweek: rivals start them, you don't**
+
+| Player | Rivals starting | Next | Form |
+|---|---|---|---|
+| Thorne (MID, BRK) | 62% | SOL (A) 2 | 7.4 |
+| Mbala (FWD, DUN) | 48% | VAL (A) 4 | 5.9 |
+
+**On your bench, but rivals start them:** Quint (DEF), 55% of rivals.
+**Your differentials:** Ibarra (8% of rivals), Teague (12%).
+**Rival captains:** Reyes 71%, Okoro 14%.
+
+**Transfers: fixtures for the next 4**
+
+| Player | Rivals starting | Fixtures | Run | Can you act? |
+|---|---|---|---|---|
+| Thorne £6.4m | 62% | 2, 2, 3, 2 | Good | Yes, for Nowak |
+| Mbala £7.5m | 48% | 4, 3, 4, 3 | Tough | Yes, for Vance |
+
+## Mini-leagues
+*Your picks against each league's average, before hits.*
+
+**Gameweek 9: who swung it**
+
+| League | GW9 | Biggest upside | Biggest downside |
+|---|---|---|---|
+| Office League | +6.2 | Ibarra +8.5 | Thorne −4.3 |
+| Family Cup | −3.1 | Teague +3.6 | Mbala −6.0 |
+
+**Where you stand, by position**
+
+| League | Rank | Total | Last 5 | GK | DEF | MID | FWD |
+|---|---|---|---|---|---|---|---|
+| Office League | 2 / 12 | +31.0 | +12.4 | +2.0 | +18.5 | +14.1 | −3.6 |
+| Family Cup | 6 / 9 | −14.5 | −9.2 | −1.0 | +3.5 | −20.2 | +3.2 |
+
+Midfield is costing you in Family Cup. Thorne is the player most rivals there have and you don't.
 
 ## Sources
 - FPL API, today
@@ -56,4 +101,21 @@ Adeyemi is being heavily bought, so he may rise before the deadline. Marlow is b
 
 **Couldn't confirm:** the reason for Ostrowski's reduced minutes.
 
-Tell me which moves you want to go with.
+Reply with what you want to go with, and I'll help make the changes.
+
+---
+
+# After-deadline note
+
+*Sent separately on the first evening after each deadline, once every lineup is public. Some matches may already have been played.*
+
+**Family Cup, Gameweek 10**
+
+| Player | Each point moves you | Rivals starting | Rivals captaining |
+|---|---|---|---|
+| Ibarra | +0.89 | 11% | 0% |
+| Teague | +0.78 | 22% | 0% |
+| Thorne | −0.78 | 78% | 11% |
+| Mbala | −0.56 | 56% | 0% |
+
+Plus means you want him to score, and minus means you want him to blank. These numbers are exact, because the lineups are locked. One rival played Bench Boost.

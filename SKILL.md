@@ -16,7 +16,7 @@ Produce a short, sourced brief that helps one manager decide what to do before t
 
 ## Step 1: Get the data
 
-Run the bundled script. It reads the public FPL API and prints about 35 KB of JSON with only what the brief needs:
+Run the bundled script. It reads the public FPL API and prints about 40 KB of JSON with only what the brief needs:
 
 ```bash
 python3 scripts/fpl_snapshot.py --team-id <ID>
@@ -66,9 +66,10 @@ Keep it short enough to read on a phone. Use these sections, in this order:
 5. The XI as a table (player, club, fixture with its difficulty, form), then the bench in order
 6. Chips
 7. Price watch
-8. Sources, with dates
+8. Mini-leagues, if the manager is in small private leagues: where rivals have an edge, then the gameweek and position views
+9. Sources, with dates
 
-Label your confidence honestly. Say which calls are strong and which are close to a coin flip, and name any player you couldn't get data for. End with an invitation to reply with what they want to go with.
+Label your confidence honestly. Say which calls are strong and which are close to a coin flip, and name any player you couldn't get data for. End with: "Reply with what you want to go with, and I'll help make the changes."
 
 If the environment can publish a page or document, deliver the brief that way. Otherwise reply with it directly.
 
@@ -84,4 +85,4 @@ If the environment can publish a page or document, deliver the brief that way. O
 
 ## Scheduling (optional)
 
-To get the brief automatically, use one recurring routine that runs once every evening and calls the daily check above. Write the brief only when `write_brief_today` is true. Don't have a run create the next run: unattended runs stop for approval when they create a task, which can hold up the brief for hours.
+To get the brief automatically, use one recurring routine that runs once every evening and calls the daily check above. Write the brief only when `write_brief_today` is true, and send the after-deadline note only when `after_deadline_view_due` is true. Don't have a run create the next run: unattended runs stop for approval when they create a task, which can hold up the brief for hours.
