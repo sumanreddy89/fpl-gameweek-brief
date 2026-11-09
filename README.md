@@ -2,7 +2,7 @@
 
 A Claude skill that preps your Fantasy Premier League team before every deadline. Give it your team ID and it tells you who's injured, who to bring in, who to captain and who to bench.
 
-<p align="center"><img src="docs/example-brief.png" alt="Example brief with invented players: squad flags, where rivals have an edge, captain picks and mini-league positions" width="480"></p>
+<p align="center"><img src="docs/example-brief.png" alt="Example Gameweek 11 brief: squad flags, where rivals have an edge, captain picks and mini-league positions" width="480"></p>
 
 ## Try it in 2 minutes
 
@@ -31,7 +31,7 @@ Every brief includes:
 
 The skill only recommends. It never signs in to FPL or changes your team.
 
-See a [sample brief](examples/sample-brief.md) (invented players) for the format.
+See a [full sample brief](examples/sample-brief.md), built from real FPL data from November 2026.
 
 ## What's inside
 
@@ -121,7 +121,7 @@ python3 -m unittest discover -s tests
 
 ## Disclaimer
 
-This is an unofficial, fan-made project. It is not affiliated with or endorsed by the Premier League or Fantasy Premier League. It uses undocumented public endpoints, which can change without notice. It reads data at run time for your own personal use, and this repository does not redistribute any FPL data. Check Fantasy Premier League's terms and conditions, linked from the FPL site, before using it for anything beyond managing your own team.
+This is an unofficial, fan-made project. It is not affiliated with or endorsed by the Premier League or Fantasy Premier League. It uses undocumented public endpoints, which can change without notice. It reads data at run time for your own personal use, and apart from one dated example brief and image, this repository does not redistribute FPL data. Check Fantasy Premier League's terms and conditions, linked from the FPL site, before using it for anything beyond managing your own team.
 
 ## License
 
