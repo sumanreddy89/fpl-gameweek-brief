@@ -15,13 +15,15 @@ Produce a short, sourced brief that helps one manager decide what to do before t
 
 ## Step 1: Get the data
 
-Run the bundled script. It reads the public FPL API and prints about 20 KB of JSON with only what the brief needs:
+Run the bundled script. It reads the public FPL API and prints about 35 KB of JSON with only what the brief needs:
 
 ```bash
 python3 scripts/fpl_snapshot.py --team-id <ID>
 # after mid-week transfers:
 python3 scripts/fpl_snapshot.py --team-id <ID> --squad "Raya,Gabriel,...,Haaland" --bank 1.5
 ```
+
+With `--squad`, the script compares the names with the locked squad and takes those moves off the free transfers. It also estimates the bank if `--bank` is missing, so prefer the manager's own bank figure when they give one. Anything listed in `data_gaps` is missing: say so in the brief rather than guessing.
 
 If the shell can't reach `fantasy.premierleague.com` (some sandboxes block it), use one of these fallbacks instead:
 - A browser tool. Open any `fantasy.premierleague.com/api/...` URL, then `fetch()` the same endpoints from that page's context and reduce them the way the script does.
@@ -39,12 +41,12 @@ Do every calculation in code: hours to the deadline, bank after each transfer, a
 
 Work through these in order.
 
-1. **Red flags.** List anyone injured, suspended, doubtful (75% or lower), with a blank gameweek, or whose minutes are shrinking.
-2. **Transfers.** Give one to three options that fit the bank and the free transfers. For each, give who goes out, who comes in, the bank afterwards and a one-line reason (fixtures over the next 3–4 gameweeks, form, minutes, set pieces). Respect the 3-per-club limit and the 15-man shape (2 GK, 5 DEF, 5 MID, 3 FWD).
+1. **Red flags.** List anyone injured, suspended, doubtful (75% or lower), with a blank gameweek, or whose `recent.minutes_trend` is `falling`. Check the reason for falling minutes in team news before calling it a problem, because a short injury or a suspension also shows up this way.
+2. **Transfers.** Give one to three options that fit the bank and the free transfers. Start from `candidates`: they're already limited to players one transfer can afford, and `can_replace` names who could make way while staying within the budget and the 3-per-club limit. Bank afterwards = `bank` + the outgoing player's `selling_price` − the incoming player's `price`. For each option, give who goes out, who comes in, the bank afterwards and a one-line reason (fixtures over the next 3–4 gameweeks, form, `xgi_per_90`, minutes, `set_pieces`, and `defensive_contribution_per_90` for defenders and deeper midfielders). Respect the 15-man shape (2 GK, 5 DEF, 5 MID, 3 FWD). `projected_horizon` is a rough sort order, so never quote it as a forecast. For a two-transfer move that funds a premium, re-run with `--all-prices`.
    - Say whether rolling the transfer is better. If 5 transfers are already banked, an unused one is wasted, so say so.
    - A hit (−4) needs a clear case: an injured starter with no cover, or a strong double gameweek.
-   - Selling price can be below the current price after a rise, because FPL keeps half of any profit. Tell the manager to check the exact bank figure in the app.
-3. **Captain and vice-captain.** Give one pick each and one alternative. Weigh fixture, form, penalties, nailed minutes and FPL's `ep_next`. The vice-captain should be someone who is very likely to start.
+   - `selling_price` is an estimate, because FPL keeps half of any profit and the script works this out from the public transfer log. If a move is within £0.2m of the budget, tell the manager to check the exact figure in the app.
+3. **Captain and vice-captain.** Give one pick each and one alternative. Weigh fixture, form, `set_pieces` (`penalties: 1` means first choice), recent minutes and FPL's `ep_next`. The vice-captain should be someone who is very likely to start.
 4. **Starting XI and bench.** Choose a valid formation (1 GK, 3–5 DEF, 2–5 MID, 1–3 FWD). Order the bench by who is most likely to be needed and to score, so that each substitute can legally replace the starters most likely to miss out.
 5. **Chips.** Say which chips are still available in this half-season window, and whether this gameweek is a good time for one. Bench Boost and Triple Captain suit double gameweeks, and Free Hit suits blanks. Most weeks the answer is to hold.
 6. **Price watch.** Name the players being heavily bought or sold, among the squad and the targets.
@@ -70,7 +72,7 @@ If the environment can publish a page or document, deliver the brief that way. O
 
 ## Limits
 
-- **The public squad lags behind.** FPL publishes a team's picks only after each deadline, so transfers made since the last deadline don't show up without the manager's login. Always say which squad source the brief used.
+- **The public squad lags behind.** FPL publishes a team's picks only after each deadline, so transfers made since the last deadline don't show up without the manager's login. Always say which squad source the brief used. After a Free Hit, the script uses the squad from the gameweek before it, because the Free Hit team reverts.
 - **Free transfers are an estimate.** The script replays the season under the current rules: +1 each gameweek, a maximum of 5, and Wildcard and Free Hit weeks don't use any. Special rule changes, such as a mid-season top-up, can make it wrong. Tell the manager to check the number on their Transfers screen.
 - **The API is unofficial.** These endpoints aren't documented, and their fields can change between seasons. If a field is missing, say so rather than guessing.
 

@@ -10,16 +10,21 @@ An agent skill that prepares a Fantasy Premier League brief before each gameweek
 
 The skill only recommends. It never signs in to FPL or changes your team.
 
+See a [sample brief](examples/sample-brief.md) (invented players) for the format.
+
 ## What's inside
 
 ```
 fpl-gameweek-brief/
 ├── SKILL.md                 # instructions the agent follows
-└── scripts/
-    └── fpl_snapshot.py      # pulls and trims the public FPL data (Python 3, standard library only)
+├── scripts/
+│   └── fpl_snapshot.py      # pulls and trims the public FPL data (Python 3, standard library only)
+├── tests/                   # offline tests on invented data
+└── examples/
+    └── sample-brief.md      # what a finished brief looks like
 ```
 
-`fpl_snapshot.py` exists because FPL's main data file is several megabytes, which is too big for most agents to read whole. The script cuts it down to about 20 KB: your squad, fixtures, chips, an estimate of your free transfers, blank and double gameweeks, and the top-projected players in each position.
+`fpl_snapshot.py` exists because FPL's main data file is several megabytes, which is too big for most agents to read whole. The script cuts it down to about 35 KB: your squad with recent minutes, set-piece roles and estimated selling prices, fixtures, chips, an estimate of your free transfers, blank and double gameweeks, and the best transfer candidates you can afford in each position, ranked over the coming fixtures.
 
 ```bash
 python3 scripts/fpl_snapshot.py --team-id 1234567
@@ -30,7 +35,8 @@ Useful options:
 | Option | What it does |
 |---|---|
 | `--squad "Raya,Saka,..."` | Uses these 15 players instead of the public squad, which is needed after mid-week transfers |
-| `--bank 1.5` | Sets the bank (in £m) to go with `--squad` |
+| `--bank 1.5` | Sets the bank in £m. Without it, `--squad` estimates the bank from your changes |
+| `--all-prices` | Lists candidates even if one transfer can't afford them, for planning two-transfer moves |
 | `--horizon 4` | How many gameweeks of fixtures to show |
 | `--candidates 6` | How many transfer candidates to list per position |
 | `--min-minutes 450` | Leaves out candidates with fewer season minutes than this, so one big game doesn't top the list |
@@ -54,7 +60,14 @@ Open the FPL website, go to **Points**, and copy the number from the address bar
 
 - **Recent transfers aren't visible.** FPL only publishes a squad after each deadline, so transfers made since the last one won't appear. Tell the agent your current 15 players, or share a screenshot of your Pick Team screen.
 - **Free transfers are an estimate,** based on the current rules (+1 each gameweek, a maximum of 5, and none used on Wildcard or Free Hit weeks). Check the number in the app.
+- **Selling prices are an estimate,** worked out from your public transfer log. Check the app if a move is tight on budget.
 - **Some sandboxes block the FPL site.** The skill falls back to a browser tool or to smaller endpoints when that happens.
+
+## Tests
+
+```bash
+python3 -m unittest discover -s tests
+```
 
 ## Disclaimer
 
