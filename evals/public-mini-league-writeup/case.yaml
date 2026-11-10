@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: public-mini-league-writeup
+expected_outcome: |
+  A post drafted from fpl_leagues.py output that explains gains and losses by position and decisions, and keeps rival team names out because the post is public.
+context:
+  scaffold_script: place-files.sh

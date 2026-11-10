@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: full-brief-injured-starter
+expected_outcome: |
+  A short brief in the SKILL.md section order that flags the injured, doubtful and rotation-risk players, gives affordable transfer options with the bank afterwards, a valid XI and bench, captain and vice, and doesn't invent team news.
+context:
+  scaffold_script: place-files.sh
