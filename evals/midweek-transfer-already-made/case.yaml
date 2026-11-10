@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: midweek-transfer-already-made
+expected_outcome: |
+  The run treats Esposito as in the squad (via --squad or equivalent), uses the manager's bank, counts one free transfer left, and gives captain, XI and bench from the updated squad.
+context:
+  scaffold_script: place-files.sh

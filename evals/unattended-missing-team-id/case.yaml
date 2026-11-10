@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: unattended-missing-team-id
+expected_outcome: |
+  The run has no team ID and nobody to ask, so it stops and says the team ID is missing, without guessing an ID or inventing a squad.
