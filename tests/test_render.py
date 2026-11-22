@@ -98,6 +98,26 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class TrackRecord(unittest.TestCase):
+    def test_track_record_shows_calls_and_totals(self):
+        card = {"calls": [
+            {"gw": 10, "played": True, "captain": {"recommended": "Striker", "recommended_points": 2, "best_in_xi": "Back", "best_in_xi_points": 10},
+             "transfers": [{"out": "A", "in": "B", "net": -7, "made": True}]},
+            {"gw": 11, "played": True, "in_progress": True, "captain": {"recommended": "Striker"}, "transfers": []},
+            {"gw": 12, "played": False}],
+            "summary": {"captain_points": 2, "captain_best_possible": 10, "transfers_that_won": 0, "transfers_scored": 1, "transfer_net_points": -7},
+            "note": "Hindsight."}
+        page = rb.render(snap(), {}, card)
+        self.assertIn("Track record", page)
+        self.assertIn('<span class="net down">-7</span>', page)
+        self.assertIn("live", page)
+        self.assertNotIn("<td>12", page)
+        self.assertIn("0 of 1 came out ahead", page)
+
+    def test_no_track_record_without_a_scorecard(self):
+        self.assertNotIn("Track record", rb.render(snap(), {}))
+
+
 class ChipStrip(unittest.TestCase):
     def test_strip_marks_planned_chips_and_doubles(self):
         s = snap()

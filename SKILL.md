@@ -50,6 +50,11 @@ Start with the last gameweek, then work through the decisions in order.
    - `running hot`: returns well above chances. Don't buy, or captain, on returns alone.
    - Goalkeepers and defenders aren't judged on xGI: a blank there is usually goals conceded, so look at the team's fixtures, not the player.
    Feed this into the transfers and captain below, and say when it changed a call.
+   **Own the brief's own past calls.** If earlier briefs' calls are available (a scheduled run keeps one line per gameweek, such as `GW11 · Captain: Haaland · Transfer: Calvert-Lewin out, N.Jackson in`), score them:
+   ```bash
+   python3 scripts/fpl_scorecard.py --team-id <ID> --call "<line>" --call "<line>" > /tmp/scorecard.json
+   ```
+   It gives each captain call's points against the best starter that week, and each transfer's points in and out over three gameweeks, and whether the manager made it. If last week's call went wrong, say so plainly in the review, with the numbers, and say what you'd now do differently. If the same kind of call keeps missing (for example the captain three weeks running), treat that as evidence when you choose again. The best starter is hindsight: missing him isn't always a mistake, so don't overcorrect on one week.
 
 1. **Red flags.** List anyone injured, suspended, doubtful (75% or lower), with a blank gameweek, or whose `recent.minutes_trend` is `falling`. Check the reason for falling minutes in team news before calling it a problem, because a short injury or a suspension also shows up this way.
 2. **Transfers.** Give one to three options that fit the bank and the free transfers. Start from `candidates`: they're already limited to players one transfer can afford, and `can_replace` names who could make way while staying within the budget and the 3-per-club limit. Bank afterwards = `bank` + the outgoing player's `selling_price` − the incoming player's `price`. For each option, give who goes out, who comes in, the bank afterwards and a one-line reason (fixtures over the next 3–4 gameweeks, form, `xgi_per_90`, minutes, `set_pieces`, and `defensive_contribution_per_90` for defenders and deeper midfielders). Respect the 15-man shape (2 GK, 5 DEF, 5 MID, 3 FWD). `projected_horizon` is a rough sort order, so never quote it as a forecast. For a two-transfer move that funds a premium, re-run with `--all-prices`.
@@ -79,8 +84,10 @@ Also look at both sides of any match where the squad has players on both teams, 
 If the environment can run scripts and publish a page, render it with the bundled design instead of writing HTML yourself. Save the snapshot output to a file, write your decisions as JSON with the Write tool (shape in `examples/brief.json`), then run:
 
 ```bash
-python3 scripts/render_brief.py --snapshot /tmp/snap.json --brief /tmp/brief.json --out /tmp/brief.html
+python3 scripts/render_brief.py --snapshot /tmp/snap.json --brief /tmp/brief.json --scorecard /tmp/scorecard.json --out /tmp/brief.html
 ```
+
+Leave out `--scorecard` if there were no past calls to score.
 
 and publish `/tmp/brief.html`. The renderer takes fixtures, form, xGI and the last gameweek from the snapshot, so don't retype numbers in the JSON. Give each decision a confidence of `strong`, `lean` or `coin flip`, and give each transfer a `reason`: `red flag`, `poor form` or `clearly better` (the three reasons in Step 3). The renderer checks the transfer rules and prints any break as a "Rule check" line on the page and on stderr: change the call rather than publish with one. Players it can't find are shown as "not in data": fix the name rather than leaving it. If the renderer fails, write the page yourself with the same sections.
 
@@ -88,7 +95,7 @@ Keep it short enough to read on a phone. Use these sections, in this order:
 
 1. The deadline in local time, plus points, rank, bank and free transfers
 2. Your moves: transfers, captain, vice and chip, each with a confidence
-3. Last gameweek review: the captain and each blank, bad luck or bad form
+3. Last gameweek review: the captain and each blank, bad luck or bad form, then the track record of past calls
 4. Squad flags
 5. The XI by position (the renderer draws a pitch), then the bench in order
 6. Form check: chances against returns for the attackers

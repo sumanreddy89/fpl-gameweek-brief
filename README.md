@@ -44,7 +44,8 @@ fpl-gameweek-brief/
 │   ├── fpl_snapshot.py      # pulls and trims the public FPL data
 │   ├── fpl_daily.py         # says if a brief or note is due and flags price moves
 │   ├── fpl_leagues.py       # compares your picks with your mini-leagues
-│   └── render_brief.py      # turns the agent's decisions into the brief page
+│   ├── render_brief.py      # turns the agent's decisions into the brief page
+│   └── fpl_scorecard.py     # scores past calls against the real points
 ├── tests/                   # offline tests on invented data
 ├── evals/                   # checks an agent follows SKILL.md; see evals/README.md
 └── examples/

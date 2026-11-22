@@ -107,7 +107,7 @@ def check_transfers(snap, brief):
     return problems
 
 
-def render(snap, brief):
+def render(snap, brief, scorecard=None):
     players = Players(snap)
     team = snap.get("team") or {}
     gw = snap.get("next_gameweek")
@@ -190,6 +190,33 @@ def render(snap, brief):
             a("</ul>")
         if lg.get("summary"):
             a(f'<p class="small">{esc(lg["summary"])}</p>')
+        a("</section>")
+
+    # ---- Track record: past calls against real points ----
+    calls = [c for c in (scorecard or {}).get("calls", []) if c.get("played")]
+    if calls:
+        sm = scorecard.get("summary") or {}
+        a('<section aria-labelledby="h-track"><h2 id="h-track">Track record <span class="sub">past briefs against real points</span></h2>')
+        a('<div class="tbl"><table class="track"><thead><tr><th>GW</th><th>Captain call</th><th>Best starter</th><th>Transfer call</th></tr></thead><tbody>')
+        for c in calls[-6:]:
+            cap = c.get("captain") or {}
+            cap_cell = (f'{esc(cap.get("recommended"))} <b>{esc(cap.get("recommended_points"))}</b>' if "recommended_points" in cap
+                        else esc(cap.get("recommended") or "–"))
+            best = (f'{esc(cap.get("best_in_xi"))} {esc(cap.get("best_in_xi_points"))}' if cap.get("best_in_xi") else "–")
+            moves = []
+            for m in c.get("transfers") or []:
+                if "net" in m:
+                    cls = "up" if m["net"] > 0 else "down" if m["net"] < 0 else ""
+                    moves.append(f'{esc(m["out"])} → {esc(m["in"])} <span class="net {cls}">{m["net"]:+d}</span>'
+                                 + (' <span class="small">made</span>' if m.get("made") else ""))
+                else:
+                    moves.append(f'{esc(m["out"])} → {esc(m["in"])} <span class="small">not scored</span>')
+            gw = esc(c["gw"]) + ('<span class="small"> live</span>' if c.get("in_progress") else "")
+            a(f'<tr><td>{gw}</td><td>{cap_cell}</td><td>{best}</td><td>{"<br>".join(moves) or "Roll"}</td></tr>')
+        a("</tbody></table></div>")
+        a(f'<p class="small">Captain picks scored {esc(sm.get("captain_points"))} (before the armband) against {esc(sm.get("captain_best_possible"))} '
+          f'for the best starter each week. Transfers: {esc(sm.get("transfers_that_won"))} of {esc(sm.get("transfers_scored"))} came out ahead, '
+          f'net {sm.get("transfer_net_points", 0):+d} over each move\'s first three weeks. {esc(scorecard.get("note"))}</p>')
         a("</section>")
 
     # ---- Pitch ----
@@ -475,6 +502,13 @@ section { min-width: 0; }
 .mk { font: 700 10px var(--mono); padding: 0 5px; border-radius: 4px; }
 .mk.d { background: var(--accent); color: var(--surface); } .mk.b { background: var(--poor); color: var(--surface); }
 .cp { font: 600 10.5px var(--body); background: var(--night); color: var(--night-ink); border-radius: 99px; padding: 1px 7px; white-space: nowrap; }
+.tbl { overflow-x: auto; }
+.track { border-collapse: collapse; width: 100%; font-size: 13.5px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.track th, .track td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.track th { font: 700 11px var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.track tr:last-child td { border-bottom: 0; }
+.net { font: 600 12px var(--mono); padding: 0 5px; border-radius: 4px; background: var(--line); }
+.net.up { background: var(--accent-soft); color: var(--accent); } .net.down { background: var(--poor-soft); color: var(--poor); }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
 .card .ct { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
 .card .conf { margin-left: auto; }
@@ -493,6 +527,7 @@ def main(argv=None):
     ap.add_argument("--snapshot", required=True)
     ap.add_argument("--brief", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--scorecard", help="output of fpl_scorecard.py, for the track record")
     args = ap.parse_args(argv)
     with open(args.snapshot, encoding="utf-8") as f:
         snap = json.load(f)
@@ -500,7 +535,11 @@ def main(argv=None):
         brief = json.load(f)
     for problem in check_transfers(snap, brief):
         print("rule check: " + problem, file=sys.stderr)
-    page = render(snap, brief)
+    scorecard = None
+    if args.scorecard:
+        with open(args.scorecard, encoding="utf-8") as f:
+            scorecard = json.load(f)
+    page = render(snap, brief, scorecard)
     with open(args.out, "w", encoding="utf-8") as f:
         f.write(page)
     print(f"wrote {args.out} ({len(page) // 1024} KB)")
