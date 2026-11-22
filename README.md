@@ -15,7 +15,18 @@ A Claude skill that preps your Fantasy Premier League team before every deadline
 4. **Ask Claude:**
    > Prep my FPL team for the next gameweek. My team ID is 1234567.
 
-Made transfers since the last deadline? FPL keeps them private until the deadline passes, so paste your current 15 players or a screenshot of your Pick Team screen along with the question.
+Made transfers since the last deadline? FPL keeps them private until the deadline passes, so paste your current 15 players or a screenshot of your Pick Team screen along with the question. Any list works: one per line or comma-separated, with or without prices and clubs. If a name doesn't match, the brief tells you every one that didn't, with the closest names.
+
+### Which way to install
+
+The three ways give different features, because the scripts need to run and to reach the FPL site.
+
+| | Claude app (upload the release ZIP) | Claude Code (clone into your skills folder) | Scheduled routine (repository attached) |
+|---|---|---|---|
+| Brief on request | Yes | Yes | Yes |
+| Scripts run (exact bank sums, price alerts, mini-leagues, chip plan, track record, the designed page) | Only if code execution is on and the app's sandbox can reach `fantasy.premierleague.com`. If not, a thinner brief from smaller endpoints. | Yes | Yes, once the FPL site is an allowed domain |
+| Runs on its own every evening | No | No | Yes, see [docs/SCHEDULING.md](docs/SCHEDULING.md) |
+| Gets updates | Download and upload each new release | `git pull` | Automatically, from `main` |
 
 ## What you get
 
@@ -39,7 +50,8 @@ See a [full sample brief](examples/sample-brief.md), built from real FPL data fr
 fpl-gameweek-brief/
 ├── SKILL.md                 # instructions the agent follows
 ├── docs/
-│   └── example-brief.png    # the example above
+│   ├── example-brief.png    # the example above
+│   └── SCHEDULING.md        # routine setup and a ready-to-paste prompt
 ├── scripts/                 # Python 3, standard library only
 │   ├── fpl_snapshot.py      # pulls and trims the public FPL data
 │   ├── fpl_daily.py         # says if a brief or note is due and flags price moves
@@ -48,6 +60,7 @@ fpl-gameweek-brief/
 │   └── fpl_scorecard.py     # scores past calls against the real points
 ├── tests/                   # offline tests on invented data
 ├── evals/                   # checks an agent follows SKILL.md; see evals/README.md
+├── CHANGELOG.md             # what changed in each release
 └── examples/
     ├── sample-brief.md      # what a finished brief looks like
     └── brief.json           # the decisions file render_brief.py reads
@@ -103,9 +116,7 @@ Read season totals by position. Players in one position replace each other, so c
 
 ### Running it on a schedule
 
-Use one recurring task that runs every evening and calls `fpl_daily.py`. It says whether a brief or after-deadline note is due and lists any price moves worth acting on. Avoid having each run schedule the next one, because unattended runs can stop for approval when they create a task.
-
-For a cloud task, attach this repository so each run uses the latest scripts, and add `fantasy.premierleague.com` to your allowed domains. A skill uploaded to your Claude account may include only `SKILL.md`, so don't rely on it for the scripts.
+[docs/SCHEDULING.md](docs/SCHEDULING.md) has the setup, a ready-to-paste routine prompt, how to tell it ran, and what happens when a deadline moves or a run is missed. In short: one routine every evening with this repository attached and `fantasy.premierleague.com` allowed; `fpl_daily.py` decides what each run does.
 
 ## Other agents
 

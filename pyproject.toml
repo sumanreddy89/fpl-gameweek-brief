@@ -1,0 +1,10 @@
+# Lint settings for CI (ruff). The code is standard library only; there are no dependencies to install.
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+
+[tool.ruff.lint]
+# Errors, likely bugs (pyflakes, bugbear) and whitespace. Long lines, small lambdas and the
+# names "l" in short comprehensions are accepted style here.
+select = ["E", "F", "W", "B"]
+ignore = ["E501", "E731", "E741"]

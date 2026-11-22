@@ -207,6 +207,33 @@ class SquadOverride(unittest.TestCase):
         out = s.run("--squad", squad_arg({15: 50}), "--bank", "9.9")
         self.assertEqual((out["bank"], out["bank_source"]), (9.9, "--bank"))
 
+    def test_pasted_list_with_prices_clubs_and_numbering_works(self):
+        names = [f"{n}. Player{pid} (T{(pid - 1) % 5 + 1}) £5.0m" for n, pid in enumerate(SQUAD_IDS, 1)]
+        self.assertEqual(fpl.squad_tokens("\n".join(names))[0], "Player1")
+        out = Scenario().run("--squad", "\n".join(names))
+        self.assertEqual(len(out["squad"]), 15)
+
+    def test_every_bad_name_is_reported_at_once_with_suggestions(self):
+        # Regression (Instinct's review): one bad name at a time made the paste step painful.
+        s = Scenario()
+        s.elements[2]["web_name"] = "Saliba"
+        s.elements[3]["web_name"] = "Salah"
+        bad = squad_arg({3: "Salibaa", 4: "Nobody"})
+        with self.assertRaises(SystemExit) as cm:
+            s.run("--squad", bad)
+        msg = str(cm.exception)
+        self.assertIn("Couldn't use 2 of the names", msg)
+        self.assertIn("'Salibaa': no match. Closest: Saliba (T3, id 3)", msg)
+        self.assertIn("'Nobody': no match.", msg)
+
+    def test_shared_name_lists_the_choices_with_ids(self):
+        s = Scenario()
+        s.elements[0]["web_name"] = "Twin"
+        s.elements[1]["web_name"] = "Twin"
+        with self.assertRaises(SystemExit) as cm:
+            s.run("--squad", squad_arg({1: "Twin", 2: "2"}))
+        self.assertIn("'Twin' matches 2 players: Twin (T1, id 1), Twin (T2, id 2). Use the id.", str(cm.exception))
+
     def test_rejects_wrong_shape(self):
         s = Scenario()
         s.add_candidate(50, 1, 6)
