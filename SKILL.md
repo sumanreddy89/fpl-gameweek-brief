@@ -36,11 +36,20 @@ Do every calculation in code: hours to the deadline, bank after each transfer, a
 
 - Treat the deadline from the API as fixed. Convert it to the manager's time zone, and note any clock change between now and the deadline.
 - Search for team news on every squad player who is flagged, in poor form or heavily sold, and on every transfer target. Use sources from the last three days: club press conferences, official club sites, and well-known FPL sites such as Fantasy Football Scout or Fantasy Football Hub. Record the date of each source.
+- Put the season and the gameweek in every search (for example `Haaland injury news GW12 2026/27`, or the club and the opponent), and check each result's date. Searches without them return old seasons; if nothing from the last three days turns up, say so rather than using older news.
+- For each player the review below marks as blanked or in `poor form`, look for one piece of expert analysis from the last week: a press-conference quote about role or fitness, or an FPL site's analysis (Fantasy Football Hub, Fantasy Football Scout). Use only what's free to read; never work around a paywall or a login. Name the source and date.
 - Tell confirmed facts apart from speculation. A manager's quote is a fact. Reader comments and "rotation risk" chatter are not. Never present speculation as a reason without labelling it.
 
 ## Step 3: Decide
 
-Work through these in order.
+Start with the last gameweek, then work through the decisions in order.
+
+0. **Last gameweek review.** `last_gw_review` gives the captain's points, minutes and xGI (expected goal involvement) and every starter who played and scored 2 or fewer. Each squad player's `recent.underlying_last_4` compares goals plus assists with xGI over the last four matches and gives a `verdict`. Use it to say, in one line each, why the captain and each blank happened:
+   - `unlucky`: the chances were there. Usually hold, and keep the captaincy if the fixture is fine.
+   - `poor form`: few chances for four matches. A sell candidate if the fixtures don't help; check team news for a role change or an injury first.
+   - `running hot`: returns well above chances. Don't buy, or captain, on returns alone.
+   - Goalkeepers and defenders aren't judged on xGI: a blank there is usually goals conceded, so look at the team's fixtures, not the player.
+   Feed this into the transfers and captain below, and say when it changed a call.
 
 1. **Red flags.** List anyone injured, suspended, doubtful (75% or lower), with a blank gameweek, or whose `recent.minutes_trend` is `falling`. Check the reason for falling minutes in team news before calling it a problem, because a short injury or a suspension also shows up this way.
 2. **Transfers.** Give one to three options that fit the bank and the free transfers. Start from `candidates`: they're already limited to players one transfer can afford, and `can_replace` names who could make way while staying within the budget and the 3-per-club limit. Bank afterwards = `bank` + the outgoing player's `selling_price` − the incoming player's `price`. For each option, give who goes out, who comes in, the bank afterwards and a one-line reason (fixtures over the next 3–4 gameweeks, form, `xgi_per_90`, minutes, `set_pieces`, and `defensive_contribution_per_90` for defenders and deeper midfielders). Respect the 15-man shape (2 GK, 5 DEF, 5 MID, 3 FWD). `projected_horizon` is a rough sort order, so never quote it as a forecast. For a two-transfer move that funds a premium, re-run with `--all-prices`.
@@ -57,17 +66,26 @@ Also look at both sides of any match where the squad has players on both teams, 
 
 ## Step 4: Write the brief
 
+If the environment can run scripts and publish a page, render it with the bundled design instead of writing HTML yourself. Save the snapshot output to a file, write your decisions as JSON with the Write tool (shape in `examples/brief.json`), then run:
+
+```bash
+python3 scripts/render_brief.py --snapshot /tmp/snap.json --brief /tmp/brief.json --out /tmp/brief.html
+```
+
+and publish `/tmp/brief.html`. The renderer takes fixtures, form, xGI and the last gameweek from the snapshot, so don't retype numbers in the JSON. Give each decision a confidence of `strong`, `lean` or `coin flip`. Players it can't find are shown as "not in data": fix the name rather than leaving it. If the renderer fails, write the page yourself with the same sections.
+
 Keep it short enough to read on a phone. Use these sections, in this order:
 
 1. The deadline in local time, plus points, rank, bank and free transfers
-2. Squad flags
-3. Transfers, with a one-line recommendation
-4. Captain and vice-captain
-5. The XI as a table (player, club, fixture with its difficulty, form), then the bench in order
-6. Chips
-7. Price watch
-8. Mini-leagues, if the manager is in small private leagues: where rivals have an edge, then the gameweek and position views
-9. Sources, with dates
+2. Your moves: transfers, captain, vice and chip, each with a confidence
+3. Last gameweek review: the captain and each blank, bad luck or bad form
+4. Squad flags
+5. The XI by position (the renderer draws a pitch), then the bench in order
+6. Form check: chances against returns for the attackers
+7. Transfers in detail, with the bank sums
+8. Chips and price watch
+9. Mini-leagues, if the manager is in small private leagues: where rivals have an edge, then the gameweek and position views
+10. Confidence and sources, with dates
 
 Label your confidence honestly. Say which calls are strong and which are close to a coin flip, and name any player you couldn't get data for. End with: "Reply with what you want to go with, and I'll help make the changes."
 

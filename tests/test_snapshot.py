@@ -311,6 +311,65 @@ class RecentMatches(unittest.TestCase):
                          "not enough matches")
 
 
+class Underlying(unittest.TestCase):
+    """Regression for GW11 (22 Nov 2026): the captain blanked and the brief couldn't say
+    whether that was bad luck or bad form, because match xG/xA was never read."""
+
+    @staticmethod
+    def matches(xgi, returns=0, minutes=90, n=4):
+        return {"history": [{"round": r, "minutes": minutes, "total_points": 2, "goals_scored": returns,
+                             "assists": 0, "bonus": 0, "expected_goals": str(xgi), "expected_assists": "0.0"}
+                            for r in range(1, n + 1)]}
+
+    def test_chances_without_returns_is_bad_luck(self):
+        u = fpl.recent_matches(self.matches(0.7), "FWD")["underlying_last_4"]
+        self.assertTrue(u["verdict"].startswith("unlucky"), u)
+        self.assertEqual(u["xgi"], 2.8)
+        self.assertEqual(u["goals_assists"], 0)
+
+    def test_few_chances_is_poor_form(self):
+        u = fpl.recent_matches(self.matches(0.05), "MID")["underlying_last_4"]
+        self.assertTrue(u["verdict"].startswith("poor form"), u)
+
+    def test_returns_far_above_chances_is_running_hot(self):
+        u = fpl.recent_matches(self.matches(0.3, returns=1), "FWD")["underlying_last_4"]
+        self.assertTrue(u["verdict"].startswith("running hot"), u)
+
+    def test_defenders_and_keepers_are_not_judged_on_xgi(self):
+        u = fpl.recent_matches(self.matches(0.0), "DEF")["underlying_last_4"]
+        self.assertIn("not judged", u["verdict"])
+
+    def test_cameos_are_too_few_minutes(self):
+        u = fpl.recent_matches(self.matches(0.0, minutes=20), "FWD")["underlying_last_4"]
+        self.assertEqual(u["verdict"], "too few minutes to judge")
+
+    def test_missing_xg_fields_make_no_claim(self):
+        r = fpl.recent_matches({"history": [{"round": 1, "minutes": 90, "total_points": 2}] * 4}, "FWD")
+        self.assertIsNone(r["underlying_last_4"])
+        self.assertNotIn("xGI", r["matches"][0])
+
+    def test_last_gameweek_adds_up_a_double(self):
+        hist = self.matches(0.4, n=3)["history"]
+        hist.append(dict(hist[-1]))  # two matches in round 3
+        g = fpl.recent_matches({"history": hist}, "FWD", last_gw=3)["last_gw"]
+        self.assertEqual((g["matches"], g["minutes"], g["xgi"]), (2, 180, 0.8))
+
+    def test_blanking_captain_appears_in_the_review(self):
+        s = Scenario()  # Player11 is a starting midfielder
+        for p in s.picks[9]["picks"]:
+            p["is_captain"] = p["element"] == 11
+            p["is_vice_captain"] = p["element"] == 12
+        s.summaries[11] = {"history": [{"round": r, "minutes": 90, "total_points": 2 if r == 9 else 8,
+                                        "goals_scored": 0 if r == 9 else 1, "assists": 0, "bonus": 0,
+                                        "expected_goals": "1.4", "expected_assists": "0.1"}
+                                       for r in range(6, 10)]}
+        review = s.run()["last_gw_review"]
+        self.assertEqual(review["gw"], 9)
+        self.assertEqual(review["captain"]["name"], "Player11")
+        self.assertEqual((review["captain"]["points"], review["captain"]["xgi"]), (2, 1.5))
+        self.assertIn("Player11", [b["name"] for b in review["blanks"]])
+
+
 class Rows(unittest.TestCase):
     def test_set_pieces_are_passed_through(self):
         s = Scenario()
