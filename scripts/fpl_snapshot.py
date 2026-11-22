@@ -218,6 +218,9 @@ def player_row(e, teams, fixtures, gws, last_gw):
         "transfers_out_gw": e["transfers_out_event"],
         "price_outlook": price_outlook(e),
         "fixtures": fixtures_for(e["team"], gws, fixtures, teams),
+        # Rolling fixture runs for transfer and captain planning (doubles count twice).
+        "run_4": fixture_run(e["team"], gws[0], 4, fixtures, 99) if gws else None,
+        "run_6": fixture_run(e["team"], gws[0], 6, fixtures, 99) if gws else None,
     }
 
 
@@ -385,6 +388,88 @@ def blank_double(fixtures, teams, gws):
         if blanks or doubles:
             notes.append({"gw": gw, "blank": blanks, "double": doubles})
     return notes
+
+
+def fixture_run(team_id, start_gw, n, fixtures, final_gw):
+    """Games and average difficulty over the next n gameweeks (doubles count twice)."""
+    fdrs = [fdr for gw in range(start_gw, min(start_gw + n, final_gw + 1))
+            for _, _, fdr in team_fixtures(team_id, gw, fixtures)]
+    return {"games": len(fdrs), "avg_fdr": round(sum(fdrs) / len(fdrs), 2) if fdrs else None}
+
+
+def chip_plan(fixtures, teams, by_id, order, xi_ids, chips, next_gw, final_gw):
+    """Week-by-week facts for timing the remaining chips, up to the last chip deadline.
+
+    For each gameweek: blanks and doubles across the league, how many games the squad
+    and the starting XI have, the XI's average difficulty, and which squad players blank
+    or double. Fixtures without a gameweek yet (postponed) are counted per club, because
+    that's usually where later double gameweeks come from."""
+    left = [c for c in chips if c.get("available")]
+    if not left:
+        return None
+    stops = []
+    for c in left:
+        try:
+            stops.append(int(c["window"].split("-")[1]))
+        except (KeyError, IndexError, ValueError):
+            pass
+    end = min(max(stops) if stops else final_gw, final_gw)
+    weeks = []
+    for gw in range(next_gw, end + 1):
+        count = {t: 0 for t in teams}
+        for f in fixtures:
+            if f.get("event") == gw:
+                count[f["team_h"]] = count.get(f["team_h"], 0) + 1
+                count[f["team_a"]] = count.get(f["team_a"], 0) + 1
+
+        def games(ids):
+            return sum(count.get(by_id[i]["team"], 0) for i in ids)
+
+        def fdrs(ids):
+            return [fdr for i in ids for _, _, fdr in team_fixtures(by_id[i]["team"], gw, fixtures)]
+
+        def avg(xs):
+            return round(sum(xs) / len(xs), 2) if xs else None
+
+        bench_ids = [i for i in order if i not in xi_ids]
+        xi_fdr = fdrs(xi_ids)
+        # Triple Captain candidates: squad midfielders and forwards with an easy game (2 or less).
+        cap_options = []
+        for i in order:
+            if by_id[i]["element_type"] not in (3, 4):
+                continue
+            for opp, home, fdr in team_fixtures(by_id[i]["team"], gw, fixtures):
+                if fdr <= 2:
+                    cap_options.append(f'{by_id[i]["web_name"]} v {teams.get(opp, opp)} ({"H" if home else "A"}) {fdr}')
+        weeks.append({
+            "gw": gw,
+            "double": sorted(teams[t] for t, n in count.items() if n > 1 and t in teams),
+            "blank": sorted(teams[t] for t, n in count.items() if n == 0 and t in teams),
+            "squad_games": games(order),
+            "xi_games": games(xi_ids),
+            "bench_games": games(bench_ids),
+            "xi_avg_fdr": avg(xi_fdr),
+            "bench_avg_fdr": avg(fdrs(bench_ids)),
+            "squad_avg_fdr": avg(fdrs(order)),
+            "captain_options": cap_options,
+            "squad_blanks": [by_id[i]["web_name"] for i in order if count.get(by_id[i]["team"], 0) == 0],
+            "squad_doubles": [by_id[i]["web_name"] for i in order if count.get(by_id[i]["team"], 0) > 1],
+        })
+    unscheduled = {}
+    for f in fixtures:
+        if f.get("event") is None:
+            for t in (f["team_h"], f["team_a"]):
+                if t in teams:
+                    unscheduled[teams[t]] = unscheduled.get(teams[t], 0) + 1
+    return {
+        "window": f"GW{next_gw}-{end}",
+        "chips_left": [c["chip"] for c in left],
+        "weeks": weeks,
+        "unscheduled_fixtures": unscheduled or None,
+        "note": ("Doubles and blanks are often announced late. Clubs with unscheduled fixtures "
+                 "are the likeliest to get a double gameweek. Treat the plan as provisional and "
+                 "re-check it every week."),
+    }
 
 
 def free_hit_weeks(history):
@@ -647,6 +732,8 @@ def build_snapshot(args, src):
         "hit_cost_already_taken": hit_cost or None,
         "chips": chips_status(boot, history, next_gw),
         "blank_double_gws": blank_double(fixtures, teams, gws),
+        "chip_plan": chip_plan(fixtures, teams, by_id, order, [] if args.squad else order[:11],
+                               chips_status(boot, history, next_gw), next_gw, final_gw),
         "clubs_at_limit": [teams[t] for t, n in club_counts.items() if n >= club_limit],
         "last_gw_review": last_gw_review,
         "squad": squad,

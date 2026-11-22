@@ -370,6 +370,57 @@ class Underlying(unittest.TestCase):
         self.assertIn("Player11", [b["name"] for b in review["blanks"]])
 
 
+class ChipPlan(unittest.TestCase):
+    """Chips expire at a set gameweek; the brief needs week-by-week facts to time them."""
+
+    def run_plan(self, s):
+        s.history["chips"] = []
+        return s.run()["chip_plan"]
+
+    def test_covers_every_week_to_the_chip_deadline(self):
+        s = Scenario()
+        plan = self.run_plan(s)
+        self.assertEqual(plan["window"], "GW10-13")  # fixtures stop at 13 in the scenario
+        self.assertEqual([w["gw"] for w in plan["weeks"]], [10, 11, 12, 13])
+        self.assertIn("Wildcard", plan["chips_left"])
+
+    def test_counts_doubles_and_blanks_for_the_squad(self):
+        s = Scenario()
+        s.fixtures.append({"event": 11, "team_h": 1, "team_a": 6, "team_h_difficulty": 2, "team_a_difficulty": 4})
+        s.fixtures = [f for f in s.fixtures if not (f["event"] == 12 and 5 in (f["team_h"], f["team_a"]))]
+        weeks = {w["gw"]: w for w in self.run_plan(s)["weeks"]}
+        self.assertIn("T1", weeks[11]["double"])
+        self.assertEqual(weeks[11]["squad_games"], 18)  # 15 + 3 team-1 players twice
+        self.assertIn("T5", weeks[12]["blank"])
+        self.assertEqual(len(weeks[12]["squad_blanks"]), 3)
+
+    def test_unscheduled_fixtures_are_counted_per_club(self):
+        s = Scenario()
+        s.fixtures.append({"event": None, "team_h": 2, "team_a": 3, "team_h_difficulty": 3, "team_a_difficulty": 3})
+        self.assertEqual(self.run_plan(s)["unscheduled_fixtures"], {"T2": 1, "T3": 1})
+
+    def test_easy_games_list_captain_options(self):
+        s = Scenario()
+        for f in s.fixtures:
+            if f["event"] == 10 and f["team_h"] == 1:
+                f["team_h_difficulty"] = 2
+        week = self.run_plan(s)["weeks"][0]
+        # Team 1 holds players 1, 6, 11: only 11 is a midfielder or forward.
+        self.assertEqual(week["captain_options"], ["Player11 v T2 (H) 2"])
+
+    def test_no_plan_when_every_chip_is_used(self):
+        s = Scenario()
+        s.history["chips"] = [{"name": "wildcard", "event": 5}]
+        self.assertIsNone(s.run()["chip_plan"])
+
+    def test_fixture_run_counts_doubles_twice(self):
+        fixtures = [{"event": 1, "team_h": 1, "team_a": 2, "team_h_difficulty": 2, "team_a_difficulty": 4},
+                    {"event": 1, "team_h": 3, "team_a": 1, "team_h_difficulty": 3, "team_a_difficulty": 4},
+                    {"event": 2, "team_h": 2, "team_a": 3, "team_h_difficulty": 3, "team_a_difficulty": 3}]
+        self.assertEqual(fpl.fixture_run(1, 1, 4, fixtures, 38), {"games": 2, "avg_fdr": 3.0})
+        self.assertEqual(fpl.fixture_run(1, 2, 4, fixtures, 38), {"games": 0, "avg_fdr": None})
+
+
 class Rows(unittest.TestCase):
     def test_set_pieces_are_passed_through(self):
         s = Scenario()
