@@ -52,7 +52,8 @@ Start with the last gameweek, then work through the decisions in order.
    Feed this into the transfers and captain below, and say when it changed a call.
    **Own the brief's own past calls.** If earlier briefs' calls are available (a scheduled run keeps one line per gameweek, such as `GW11 · Captain: Haaland · Transfer: Calvert-Lewin out, N.Jackson in`), score them:
    ```bash
-   python3 scripts/fpl_scorecard.py --team-id <ID> --call "<line>" --call "<line>" > /tmp/scorecard.json
+   python3 scripts/fpl_scorecard.py --team-id <ID> --calls-file ~/.fpl-brief/calls.txt > /tmp/scorecard.json
+   # or pass the lines directly: --call "<line>" --call "<line>"
    ```
    It gives each captain call's points against the best starter that week, and each transfer's points in and out over three gameweeks, and whether the manager made it. If last week's call went wrong, say so plainly in the review, with the numbers, and say what you'd now do differently. If the same kind of call keeps missing (for example the captain three weeks running), treat that as evidence when you choose again. The best starter is hindsight: missing him isn't always a mistake, so don't overcorrect on one week.
 
@@ -88,6 +89,14 @@ python3 scripts/render_brief.py --snapshot /tmp/snap.json --brief /tmp/brief.jso
 ```
 
 Leave out `--scorecard` if there were no past calls to score.
+
+**Record this brief's call** after publishing, so next week's brief can score it. One line: the gameweek, the captain, and the top transfer or `roll`:
+
+```bash
+python3 scripts/fpl_scorecard.py --team-id <ID> --calls-file ~/.fpl-brief/calls.txt --record "GW12 · Captain: Haaland · Transfer: roll"
+```
+
+A re-run for the same gameweek replaces its line. Use a file that survives between runs. A scheduled run in a fresh sandbox loses its files, so keep the line somewhere the next run can read (a notes table, for example) and pass those lines back with `--call`.
 
 and publish `/tmp/brief.html`. The renderer takes fixtures, form, xGI and the last gameweek from the snapshot, so don't retype numbers in the JSON. Give each decision a confidence of `strong`, `lean` or `coin flip`, and give each transfer a `reason`: `red flag`, `poor form` or `clearly better` (the three reasons in Step 3). The renderer checks the transfer rules and prints any break as a "Rule check" line on the page and on stderr: change the call rather than publish with one. Players it can't find are shown as "not in data": fix the name rather than leaving it. If the renderer fails, write the page yourself with the same sections.
 

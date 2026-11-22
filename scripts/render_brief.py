@@ -124,7 +124,8 @@ def render(snap, brief, scorecard=None):
     stats = [(team.get("overall_points"), "pts"),
              (f'{team["overall_rank"]:,}' if team.get("overall_rank") else None, "rank"),
              (f'£{snap["bank"]:.1f}m' if snap.get("bank") is not None else None, "bank"),
-             (snap.get("free_transfers_estimate"), "free transfers (est.)"),
+             (snap.get("free_transfers_estimate"),
+              "free transfer (est.)" if snap.get("free_transfers_estimate") == 1 else "free transfers (est.)"),
              (f'£{snap["team_value"]:.1f}m' if snap.get("team_value") else None, "team value")]
     left = [c["chip"] for c in snap.get("chips") or [] if c.get("available")]
     if snap.get("chips") is not None:
@@ -404,7 +405,7 @@ PAGE = """<title>{{TITLE}}</title>
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); }
 .wrap { max-width: 680px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-main.wrap { display: grid; gap: 30px; padding-block: 22px 48px; }
+main.wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 30px; padding-block: 22px 48px; }
 h1, h2 { font-family: var(--display); margin: 0; text-wrap: balance; }
 h2 { font-size: 15px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; display: flex; align-items: baseline; gap: 8px; }
 h2 .sub { font: 500 12px var(--body); letter-spacing: 0; text-transform: none; }

@@ -68,6 +68,40 @@ class Parse(unittest.TestCase):
         self.assertIsNone(sc.parse_call("Captain: Salah"))
 
 
+class CallLog(unittest.TestCase):
+    """Without a call log, a fresh user's track record stays empty forever (Instinct's review)."""
+
+    def setUp(self):
+        self.dir = tempfile.mkdtemp()
+        self.path = os.path.join(self.dir, "calls.txt")
+
+    def tearDown(self):
+        shutil.rmtree(self.dir, True)
+
+    def test_record_creates_the_log_and_a_rerun_replaces_its_gameweek(self):
+        sc.record_call(self.path, "GW2 · Captain: A · Transfer: roll")
+        sc.record_call(self.path, "GW1 · Captain: B · Transfer: X out, Y in")
+        lines = sc.record_call(self.path, "GW2 · Captain: C · Transfer: roll")
+        self.assertEqual(lines, ["GW1 · Captain: B · Transfer: X out, Y in", "GW2 · Captain: C · Transfer: roll"])
+
+    def test_record_rejects_a_line_without_a_gameweek(self):
+        with self.assertRaises(SystemExit):
+            sc.record_call(self.path, "Captain: A")
+
+    def test_main_reads_the_log(self):
+        sc.main(["--team-id", "1", "--calls-file", self.path, "--record", "GW1 · Captain: Captain · Transfer: roll"])
+        data = Data()
+        try:
+            data.source()
+            import io, contextlib
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                sc.main(["--team-id", str(TEAM), "--calls-file", self.path, "--data-dir", data.dir, "--now", NOW.isoformat()])
+            self.assertEqual(json.loads(out.getvalue())["calls"][0]["captain"]["recommended_points"], 2)
+        finally:
+            data.close()
+
+
 class Score(unittest.TestCase):
     def setUp(self):
         self.data = Data()

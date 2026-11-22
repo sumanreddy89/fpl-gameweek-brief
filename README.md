@@ -2,7 +2,7 @@
 
 A Claude skill that preps your Fantasy Premier League team before every deadline. Give it your team ID and it tells you who's injured, who to bring in, who to captain and who to bench.
 
-<p align="center"><img src="docs/example-brief.png" alt="Example Gameweek 11 brief: squad flags, where rivals have an edge, captain picks and mini-league positions" width="480"></p>
+<p align="center"><img src="docs/example-brief.png" alt="Example Gameweek 12 brief: your moves with a roll recommendation and confidence, the Gameweek 11 review of the captain and blanks, and the starting XI on a pitch" width="480"></p>
 
 ## Try it in 2 minutes
 
