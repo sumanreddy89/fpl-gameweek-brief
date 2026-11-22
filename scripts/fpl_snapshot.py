@@ -221,19 +221,82 @@ def player_row(e, teams, fixtures, gws, last_gw):
     }
 
 
-def recent_matches(summary):
-    """The last five matches, plus whether the player's minutes are falling."""
+def _xgi(r):
+    """Expected goal involvement for one match, or None if the API didn't send it."""
+    if r.get("expected_goal_involvements") not in (None, ""):
+        return float(r["expected_goal_involvements"])
+    if r.get("expected_goals") in (None, "") and r.get("expected_assists") in (None, ""):
+        return None
+    return float(r.get("expected_goals") or 0) + float(r.get("expected_assists") or 0)
+
+
+def match_line(r):
+    x = _xgi(r)
+    returns = r.get("goals_scored", 0) + r.get("assists", 0)
+    return (f'GW{r.get("round")}: {r.get("minutes", 0)} min, {r.get("total_points", 0)} pts'
+            + (f", G+A {returns}, xGI {x:.2f}" if x is not None else ""))
+
+
+def underlying(rows, pos):
+    """Is a poor run bad luck or bad form? Compares goals+assists with xGI over the matches given.
+
+    Only attackers get a verdict: for goalkeepers and most defenders, points come from
+    clean sheets and saves, which xGI says nothing about."""
+    played = [r for r in rows if r.get("minutes", 0) > 0]
+    xs = [_xgi(r) for r in played]
+    if not played or any(x is None for x in xs):
+        return None
+    mins = sum(r["minutes"] for r in played)
+    xgi = sum(xs)
+    returns = sum(r.get("goals_scored", 0) + r.get("assists", 0) for r in played)
+    per90 = xgi * 90 / mins if mins else 0.0
+    out = {"matches": len(played), "minutes": mins, "goals_assists": returns,
+           "xgi": round(xgi, 2), "xgi_per_90": round(per90, 2), "verdict": None}
+    if pos not in ("MID", "FWD"):
+        out["verdict"] = "not judged on xGI (goalkeeper or defender)"
+    elif mins < 180:
+        out["verdict"] = "too few minutes to judge"
+    elif returns <= xgi - 1.0 and per90 >= 0.4:
+        out["verdict"] = "unlucky: chances are there, returns aren't"
+    elif per90 < 0.25:
+        out["verdict"] = "poor form: few chances created or taken"
+    elif returns >= xgi + 1.5:
+        out["verdict"] = "running hot: returns well above chances"
+    else:
+        out["verdict"] = "in line with chances"
+    return out
+
+
+def recent_matches(summary, pos=None, last_gw=None):
+    """The last five matches, whether minutes are falling, bad luck vs bad form over the
+    last four, and the last gameweek in detail (for the captain and blank review)."""
     rows = sorted(summary.get("history", []),
-                  key=lambda r: (r.get("round", 0), r.get("kickoff_time") or ""))[-5:]
-    minutes = [r.get("minutes", 0) for r in rows]
+                  key=lambda r: (r.get("round", 0), r.get("kickoff_time") or ""))
+    last5 = rows[-5:]
+    minutes = [r.get("minutes", 0) for r in last5]
     trend = "not enough matches"
     if len(minutes) >= 4:
         recent = sum(minutes[-2:]) / 2
         earlier = sum(minutes[:-2]) / len(minutes[:-2])
         trend = "falling" if earlier >= 45 and recent <= 0.6 * earlier else "steady"
-    return {"matches": [f'GW{r.get("round")}: {r.get("minutes", 0)} min, '
-                        f'{r.get("total_points", 0)} pts' for r in rows],
-            "minutes_trend": trend}
+    out = {"matches": [match_line(r) for r in last5], "minutes_trend": trend,
+           "underlying_last_4": underlying(rows[-4:], pos)}
+    if last_gw is not None:
+        gw = [r for r in rows if r.get("round") == last_gw]
+        if gw:
+            xs = [_xgi(r) for r in gw]
+            out["last_gw"] = {
+                "gw": last_gw, "matches": len(gw),
+                "minutes": sum(r.get("minutes", 0) for r in gw),
+                "points": sum(r.get("total_points", 0) for r in gw),
+                "goals": sum(r.get("goals_scored", 0) for r in gw),
+                "assists": sum(r.get("assists", 0) for r in gw),
+                "bonus": sum(r.get("bonus", 0) for r in gw),
+                "xgi": None if any(x is None for x in xs) else round(sum(xs), 2),
+            }
+        else:
+            out["last_gw"] = {"gw": last_gw, "matches": 0, "minutes": 0, "points": 0}
+    return out
 
 
 def selling_price(bought, now):
@@ -503,13 +566,33 @@ def build_snapshot(args, src):
         row["selling_price_after_fall"] = (
             selling_price(bought[pid], by_id[pid]["now_cost"] - 1) / 10 if pid in bought else None)
         try:
-            row["recent"] = recent_matches(src.get(f"element-summary/{pid}/"))
+            row["recent"] = recent_matches(src.get(f"element-summary/{pid}/"), row["pos"], last_gw)
         except FetchError:
             row["recent"] = None
             missing_history.append(row["name"])
         squad.append(row)
     if missing_history:
         data_gaps.append("No recent-match data for: " + ", ".join(missing_history) + ".")
+    last_gw_review = None
+    if last_gw and squad:
+        def brief(p):
+            r = p.get("recent") or {}
+            g = r.get("last_gw") or {}
+            u = r.get("underlying_last_4") or {}
+            return {"name": p["name"], "points": g.get("points"), "minutes": g.get("minutes"),
+                    "xgi": g.get("xgi"), "form_verdict": u.get("verdict")}
+        starters = [p for p in squad if p.get("slot") and p["slot"] <= 11]
+        cap = next((p for p in squad if p.get("role") == "captain"), None)
+        last_gw_review = {
+            "gw": last_gw,
+            "captain": brief(cap) if cap else None,
+            # Starters who played and scored 2 or fewer: the "why did they blank" list.
+            "blanks": [brief(p) for p in starters
+                       if ((p.get("recent") or {}).get("last_gw") or {}).get("minutes", 0) > 0
+                       and ((p.get("recent") or {}).get("last_gw") or {}).get("points", 0) <= 2],
+            "note": "Uses the squad locked at the last deadline. xGI shows whether a blank was "
+                    "bad luck (high xGI) or a poor pick (low xGI).",
+        }
 
     club_counts = {}
     for pid in order:
@@ -565,6 +648,7 @@ def build_snapshot(args, src):
         "chips": chips_status(boot, history, next_gw),
         "blank_double_gws": blank_double(fixtures, teams, gws),
         "clubs_at_limit": [teams[t] for t, n in club_counts.items() if n >= club_limit],
+        "last_gw_review": last_gw_review,
         "squad": squad,
         "candidates": candidates,
         "data_gaps": data_gaps or None,

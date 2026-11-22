@@ -43,13 +43,17 @@ fpl-gameweek-brief/
 ├── scripts/                 # Python 3, standard library only
 │   ├── fpl_snapshot.py      # pulls and trims the public FPL data
 │   ├── fpl_daily.py         # says if a brief or note is due and flags price moves
-│   └── fpl_leagues.py       # compares your picks with your mini-leagues
+│   ├── fpl_leagues.py       # compares your picks with your mini-leagues
+│   └── render_brief.py      # turns the agent's decisions into the brief page
 ├── tests/                   # offline tests on invented data
 └── examples/
-    └── sample-brief.md      # what a finished brief looks like
+    ├── sample-brief.md      # what a finished brief looks like
+    └── brief.json           # the decisions file render_brief.py reads
 ```
 
-`fpl_snapshot.py` exists because FPL's main data file is several megabytes, which is too big for most agents to read whole. The script cuts it down to about 40 KB: your squad with recent minutes, set-piece roles and estimated selling prices, fixtures, chips, an estimate of your free transfers, blank and double gameweeks, and the best transfer candidates you can afford in each position, ranked over the coming fixtures.
+`fpl_snapshot.py` exists because FPL's main data file is several megabytes, which is too big for most agents to read whole. The script cuts it down to about 40 KB: your squad with recent minutes, set-piece roles and estimated selling prices, fixtures, chips, an estimate of your free transfers, blank and double gameweeks, and the best transfer candidates you can afford in each position, ranked over the coming fixtures. It also reviews the last gameweek: for the captain and every blank, it compares goals and assists with expected goal involvement (xGI) to tell bad luck from bad form.
+
+`render_brief.py` draws the brief as one consistent phone page (your moves, the last-gameweek review, the XI on a pitch, form bars) from the agent's decisions in a small JSON file and the snapshot's numbers.
 
 ```bash
 python3 scripts/fpl_snapshot.py --team-id 1234567
