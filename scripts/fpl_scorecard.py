@@ -215,7 +215,7 @@ def main(argv=None):
     try:
         out = score(Source(args.data_dir), args.team_id, calls, now)
     except FetchError as e:
-        raise SystemExit(str(e))
+        raise SystemExit(str(e)) from None
     json.dump(out, sys.stdout, indent=1, ensure_ascii=False)
     print()
 

@@ -163,6 +163,39 @@ class Daily(unittest.TestCase):
     def test_no_brief_right_before_the_deadline(self):
         self.assertFalse(self.check(Scenario(), "2026-03-10T08:00:00Z")["write_brief_today"])
 
+    def calls(self, *lines):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        path = os.path.join(d, "calls.txt")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + ("\n" if lines else ""))
+        return path
+
+    def check_with_log(self, now, *lines):
+        s = Scenario()
+        s.write()
+        return run(fpl_daily, "--team-id", str(TEAM), "--data-dir", s.dir, "--now", now, "--calls-file", self.calls(*lines))
+
+    def test_brief_already_written_is_not_written_again(self):
+        out = self.check_with_log("2026-03-09T19:00:00Z", "GW10 · Captain: Player13 · Transfer: roll")
+        self.assertFalse(out["write_brief_today"])
+        self.assertTrue(out["brief_already_written"])
+
+    def test_missed_evening_catches_up_before_the_deadline(self):
+        # Regression for scheduling reliability: a skipped evening run meant no brief at all.
+        out = self.check_with_log("2026-03-10T08:00:00Z", "GW9 · Captain: Player13 · Transfer: roll")
+        self.assertTrue(out["write_brief_today"])
+        self.assertTrue(out["late_brief"])
+
+    def test_no_catch_up_without_a_call_log(self):
+        out = self.check(Scenario(), "2026-03-10T08:00:00Z")
+        self.assertFalse(out["late_brief"])
+        self.assertIsNone(out["brief_already_written"])
+
+    def test_brief_window_is_reported(self):
+        out = self.check(Scenario(), "2026-03-09T19:00:00Z")
+        self.assertEqual(out["brief_window_utc"], ["2026-03-09T05:00:00+00:00", "2026-03-10T05:00:00+00:00"])
+
     def test_after_deadline_view_due_on_first_run_after_deadline(self):
         self.assertTrue(self.check(Scenario(), "2026-02-09T19:00:00Z")["after_deadline_view_due"])
 

@@ -93,7 +93,8 @@ class CallLog(unittest.TestCase):
         data = Data()
         try:
             data.source()
-            import io, contextlib
+            import contextlib
+            import io
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
                 sc.main(["--team-id", str(TEAM), "--calls-file", self.path, "--data-dir", data.dir, "--now", NOW.isoformat()])

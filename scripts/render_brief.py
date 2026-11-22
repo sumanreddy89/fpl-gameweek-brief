@@ -228,7 +228,7 @@ def render(snap, brief, scorecard=None):
         for name in xi:
             p = players.get(name)
             (rows[p["pos"]] if p and p.get("pos") in rows else missing).append((name, p))
-        a(f'<section aria-labelledby="h-xi"><h2 id="h-xi">Starting XI'
+        a('<section aria-labelledby="h-xi"><h2 id="h-xi">Starting XI'
           + (f' <span class="sub">{esc(brief.get("formation"))}</span>' if brief.get("formation") else "") + "</h2>")
         a('<div class="pitch" role="list" aria-label="Starting eleven by position">')
         for pos in reversed(POS_ORDER):

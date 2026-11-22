@@ -20,8 +20,10 @@ since then are private until the next deadline; pass --squad to override.
 """
 
 import argparse
+import difflib
 import json
 import os
+import re
 import sys
 import time
 import unicodedata
@@ -422,10 +424,10 @@ def chip_plan(fixtures, teams, by_id, order, xi_ids, chips, next_gw, final_gw):
                 count[f["team_h"]] = count.get(f["team_h"], 0) + 1
                 count[f["team_a"]] = count.get(f["team_a"], 0) + 1
 
-        def games(ids):
+        def games(ids, count=count):
             return sum(count.get(by_id[i]["team"], 0) for i in ids)
 
-        def fdrs(ids):
+        def fdrs(ids, gw=gw):
             return [fdr for i in ids for _, _, fdr in team_fixtures(by_id[i]["team"], gw, fixtures)]
 
         def avg(xs):
@@ -493,13 +495,52 @@ def locked_squad(src, team_id, last_gw, fh_weeks):
         return None
 
 
-def parse_squad(text, elements, by_id):
-    ids = []
-    for token in [t.strip() for t in text.split(",") if t.strip()]:
-        ids.append(int(token) if token.isdigit() else find_player(elements, token)["id"])
-    unknown = [i for i in ids if i not in by_id]
-    if unknown:
-        raise SystemExit(f"Unknown player ids: {unknown}.")
+NOISE = re.compile(r"\([^)]*\)|\[[^]]*\]|£\s*\d+(?:\.\d+)?m?|\b\d+(?:\.\d+)?m\b|^\s*\d+[.)]\s*|^\s*(?:GK|GKP|DEF|MID|FWD)\s*[:-]\s*|\(C\)|\(V\)",
+                   re.IGNORECASE)
+
+
+def squad_tokens(text):
+    """Split a pasted squad into player names: commas, semicolons or new lines; prices,
+    clubs in brackets, numbering, position labels and captain marks are dropped."""
+    out = []
+    for raw in re.split(r"[,;\n]+", text or ""):
+        token = NOISE.sub(" ", raw).strip(" -•*\t")
+        token = re.sub(r"\s{2,}", " ", token)
+        if token:
+            out.append(token)
+    return out
+
+
+def parse_squad(text, elements, by_id, teams=None):
+    """Turn the manager's list into 15 ids. Every name that doesn't match is reported at
+    once, with the closest names, so one paste is enough to fix them all."""
+    teams = teams or {}
+    label = lambda e: f'{e["web_name"]} ({teams.get(e["team"], "?")}, id {e["id"]})'
+    ids, problems = [], []
+    for token in squad_tokens(text):
+        if token.isdigit():
+            if int(token) in by_id:
+                ids.append(int(token))
+            else:
+                problems.append(f"'{token}': no player has this id.")
+            continue
+        try:
+            ids.append(find_player(elements, token)["id"])
+        except SystemExit as e:
+            n = norm(token)
+            if "ambiguous" in str(e):
+                same = [x for x in elements if n == norm(x["web_name"]) or n in norm(x["web_name"])
+                        or n in norm(f'{x["first_name"]} {x["second_name"]}')]
+                problems.append(f"'{token}' matches {len(same)} players: " + ", ".join(label(x) for x in same[:5])
+                                + ". Use the id.")
+            else:
+                names = {norm(x["web_name"]): x for x in elements}
+                close = difflib.get_close_matches(n, list(names), n=3, cutoff=0.6)
+                problems.append(f"'{token}': no match." + (" Closest: " + ", ".join(label(names[c]) for c in close) + "."
+                                                           if close else ""))
+    if problems:
+        raise SystemExit(f"Couldn't use {len(problems)} of the names in --squad:\n- " + "\n- ".join(problems)
+                         + "\nFix those (an id always works) and run again.")
     if len(set(ids)) != 15:
         raise SystemExit(f"--squad needs 15 different players; got {len(set(ids))}.")
     shape = {p: 0 for p in SHAPE}
@@ -514,8 +555,8 @@ def parse_squad(text, elements, by_id):
 def parse_args(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--team-id", type=int, required=True)
-    ap.add_argument("--squad", help="Comma-separated names (or ids) of the current 15, "
-                    "to override the public squad after mid-week transfers.")
+    ap.add_argument("--squad", help="The current 15 after mid-week transfers: names or ids, separated by commas, "
+                    "semicolons or new lines. Prices, clubs in brackets and numbering are ignored.")
     ap.add_argument("--bank", type=float, help="Current bank in £m. Overrides the estimate.")
     ap.add_argument("--candidates", type=int, default=6, help="Candidates per position.")
     ap.add_argument("--horizon", type=int, default=4, help="Gameweeks of fixtures to show.")
@@ -575,7 +616,7 @@ def build_snapshot(args, src):
 
     notes = []
     if args.squad:
-        order = parse_squad(args.squad, elements, by_id)
+        order = parse_squad(args.squad, elements, by_id, teams)
         captain = vice = None
         squad_src = "manual (--squad)"
     elif locked:

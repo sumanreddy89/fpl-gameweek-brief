@@ -152,7 +152,7 @@ def main(out):
             live.append({"id": p[0], "stats": {"total_points": pts, "minutes": mins}})
             history_rows.setdefault(p[0], []).append(
                 {"round": gw, "minutes": mins, "total_points": pts,
-                 "kickoff_time": f"2026-01-01T15:00:00Z"})
+                 "kickoff_time": "2026-01-01T15:00:00Z"})
         files[f"event_{gw}_live"] = {"elements": live}
     for pid, rows in history_rows.items():
         files[f"element-summary_{pid}"] = {"history": rows}
@@ -187,7 +187,7 @@ def main(out):
 
     for gw in range(1, NEXT_GW):
         files[f"entry_{TEAM}_event_{gw}_picks"] = picks(MY_LINEUP)
-    for entry, (name, lineup, cap) in RIVALS.items():
+    for entry, (_name, lineup, cap) in RIVALS.items():
         captain_idx = lineup.index(cap) if cap in lineup[:11] else 9
         for gw in range(1, NEXT_GW):
             files[f"entry_{entry}_event_{gw}_picks"] = picks(lineup, captain_idx, bank=5)

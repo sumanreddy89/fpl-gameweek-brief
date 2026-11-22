@@ -119,7 +119,7 @@ If the environment can publish a page or document, deliver the brief that way. O
 
 ## Daily check
 
-`python3 scripts/fpl_daily.py --team-id <ID>` is cheap to run every evening. `write_brief_today` is true on the last evening at least 6 hours before the deadline. `after_deadline_view_due` is true on the first run after a deadline: run `python3 scripts/fpl_leagues.py --team-id <ID> --after-deadline` and tell the manager who they want to score and to blank in each league. `swing_per_point` is exact, because lineups are locked. `price_alerts` lists only moves the manager can act on before tonight's update: a squad player whose fall would cut their selling price, or a top transfer target about to rise. If there are no alerts and no brief is due, stay silent.
+`python3 scripts/fpl_daily.py --team-id <ID>` is cheap to run every evening. With `--calls-file <log>` it also skips a brief already written for the gameweek and writes a late brief (`late_brief`) if the evening run was missed; `brief_window_utc` says when a run writes the brief. Setup and a ready-to-paste routine prompt are in `docs/SCHEDULING.md`. `write_brief_today` is true on the last evening at least 6 hours before the deadline. `after_deadline_view_due` is true on the first run after a deadline: run `python3 scripts/fpl_leagues.py --team-id <ID> --after-deadline` and tell the manager who they want to score and to blank in each league. `swing_per_point` is exact, because lineups are locked. `price_alerts` lists only moves the manager can act on before tonight's update: a squad player whose fall would cut their selling price, or a top transfer target about to rise. If there are no alerts and no brief is due, stay silent.
 
 ## Limits
 
