@@ -77,7 +77,8 @@ def token(p, name, role, flagged):
     badge = '<span class="arm">C</span>' if role == "C" else '<span class="arm v">V</span>' if role == "V" else ""
     flag = '<span class="flagdot" title="Flagged in this brief"></span>' if flagged else ""
     return (f'<div class="tok">{badge}{flag}<span class="shirt">{esc(p.get("club"))}</span>'
-            f'<b>{esc(p.get("name"))}</b><small><span class="fdr f{fdr or 0}">{esc(fdr or "–")}</span> {esc(fx)}</small></div>')
+            f'<b>{esc(p.get("name"))}</b><small><span class="fdr f{fdr or 0}">{esc(fdr or "–")}</span> {esc(fx)}</small>'
+            + (f'<small class="fm">form {esc(p.get("form"))}</small>' if p.get("form") is not None else "") + '</div>')
 
 
 def render(snap, brief):
@@ -97,7 +98,11 @@ def render(snap, brief):
     stats = [(team.get("overall_points"), "pts"),
              (f'{team["overall_rank"]:,}' if team.get("overall_rank") else None, "rank"),
              (f'£{snap["bank"]:.1f}m' if snap.get("bank") is not None else None, "bank"),
-             (snap.get("free_transfers_estimate"), "free transfers (est.)")]
+             (snap.get("free_transfers_estimate"), "free transfers (est.)"),
+             (f'£{snap["team_value"]:.1f}m' if snap.get("team_value") else None, "team value")]
+    left = [c["chip"] for c in snap.get("chips") or [] if c.get("available")]
+    if snap.get("chips") is not None:
+        stats.append((", ".join(left) if left else "none", "chips left"))
     a('<p class="statline">' + "".join(f'<span><b>{esc(v)}</b> {esc(l)}</span>' for v, l in stats if v is not None) + "</p>")
     if brief.get("written_note"):
         a(f'<p class="meta">{esc(brief["written_note"])}</p>')
@@ -115,7 +120,7 @@ def render(snap, brief):
           + f'</span>{conf_badge(t.get("confidence"))}</li>')
     if brief.get("roll"):
         a(f'<li><span class="k">Transfer</span><span class="v">{esc(brief["roll"])}</span>{conf_badge(brief.get("roll_confidence"))}</li>')
-    for key, label in (("captain", "Captain"), ("vice", "Vice")):
+    for key, label in (("captain", "Captain"), ("vice", "Vice"), ("captain_alt", "Alt. captain")):
         c = brief.get(key) or {}
         if c.get("name"):
             a(f'<li><span class="k">{label}</span><span class="v"><b>{esc(c["name"])}</b>'
@@ -182,8 +187,13 @@ def render(snap, brief):
         a("</div>")
         bench = brief.get("bench") or []
         if bench:
+            def bench_chip(i, n):
+                p = players.get(n)
+                fx, fdr = fixture_parts(((p or {}).get("fixtures") or [""])[0])
+                extra = (f' <span class="fdr f{fdr or 0}">{esc(fdr or "–")}</span> <span class="small">{esc(fx)}</span>' if p else "")
+                return f'<span class="bt"><i>{i}</i>{esc(n)}{extra}</span>'
             a('<div class="bench"><span class="k">Bench</span>' + "".join(
-                f'<span class="bt"><i>{i}</i>{esc(n)}</span>' for i, n in enumerate(bench, 1)) + "</div>")
+                bench_chip(i, n) for i, n in enumerate(bench, 1)) + "</div>")
         if brief.get("xi_note"):
             a(f'<p class="small">{esc(brief["xi_note"])}</p>')
         a("</section>")
@@ -365,6 +375,7 @@ section { min-width: 0; }
 .tok .shirt { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,.95); color: #12261d; display: grid; place-items: center; font: 700 12px var(--display); letter-spacing: .04em; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
 .tok b { font-size: 12px; font-weight: 600; line-height: 1.2; background: rgba(8,25,18,.72); padding: 1px 6px; border-radius: 4px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tok small { font-size: 10.5px; color: rgba(255,255,255,.9); display: inline-flex; gap: 3px; align-items: center; white-space: nowrap; }
+.tok .fm { font: 500 10px var(--mono); color: rgba(255,255,255,.8); }
 .tok.missing .shirt { background: rgba(255,255,255,.4); }
 .arm { position: absolute; top: -4px; left: calc(50% + 10px); width: 18px; height: 18px; border-radius: 50%; background: #111; color: #fff; font: 700 10px/18px var(--body); text-align: center; z-index: 1; border: 1.5px solid #fff; }
 .arm.v { background: #fff; color: #111; border-color: #111; }

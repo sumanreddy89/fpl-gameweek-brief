@@ -66,6 +66,21 @@ class Render(unittest.TestCase):
         self.assertNotIn("javascript:", page)
         self.assertIn('href="https://example.com"', page)
 
+    def test_metrics_from_the_old_page_are_kept(self):
+        # Regression (22 Nov 2026): the first version of the design dropped team value,
+        # chips left, per-player form, the captain alternative and bench fixtures.
+        s = snap()
+        s["team_value"] = 102.8
+        s["chips"] = [{"chip": "Free Hit", "available": True}, {"chip": "Wildcard", "available": False}]
+        for p in s["squad"]:
+            p["form"] = 6.3
+        page = rb.render(s, {"xi": ["Keeper"], "bench": ["Back"], "captain_alt": {"name": "Middle"}})
+        self.assertIn("£102.8m</b> team value", page)
+        self.assertIn("Free Hit</b> chips left", page)
+        self.assertIn("form 6.3", page)
+        self.assertIn("Alt. captain", page)
+        self.assertIn('<span class="bt"><i>1</i>Back <span class="fdr f2">', page)
+
     def test_empty_brief_still_renders_closing_line(self):
         page = rb.render({"team": {}, "next_gameweek": 1}, {})
         self.assertIn("Reply in a chat with what you want to go with", page)

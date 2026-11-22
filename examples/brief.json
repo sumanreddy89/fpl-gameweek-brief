@@ -15,6 +15,7 @@
   ],
   "captain": { "name": "Haaland", "confidence": "strong", "why": "Blanked on bad luck, not bad form: 2.6 xGI in his last four." },
   "vice": { "name": "Evanilson", "why": "Has started every match." },
+  "captain_alt": { "name": "Ødegaard", "confidence": "coin flip", "why": "Only if you want a differential; few rivals own him." },
   "chip": { "call": "Hold", "confidence": "strong", "why": "No double gameweek yet.", "detail": "Free Hit, Bench Boost and Triple Captain are left and expire after GW19." },
   "last_gw": {
     "captain_take": "He had the chances (1.08 xGI) and didn't finish them. Keep him; the underlying numbers are steady.",
