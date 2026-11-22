@@ -2,7 +2,7 @@
 
 What changed, newest first. Releases are tagged; the Claude app gets a change only when a new release ZIP is uploaded, while Claude Code and scheduled routines get `main` directly.
 
-## Unreleased
+## v1.3 (22 Nov 2026)
 
 **Scheduling and setup**
 - `docs/SCHEDULING.md`: a ready-to-paste routine prompt, setup steps, how to tell it ran, and what happens when a deadline moves or a run is missed.
