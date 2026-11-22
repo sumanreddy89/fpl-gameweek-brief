@@ -20,6 +20,11 @@
   "vice": { "name": "Evanilson", "why": "Has started every match." },
   "captain_alt": { "name": "Ødegaard", "confidence": "coin flip", "why": "Only if you want a differential; few rivals own him." },
   "chip": { "call": "Hold", "confidence": "strong", "why": "No double gameweek yet.", "detail": "Free Hit, Bench Boost and Triple Captain are left and expire after GW19." },
+  "chip_plan": [
+    { "chip": "Free Hit", "gw": 13, "on": "your XI's hardest week", "why": "Average difficulty 3.45, unless a blank is announced first.", "confidence": "coin flip" },
+    { "chip": "Triple Captain", "gw": 16, "on": "Haaland v HUL (H)", "why": "His easiest home game before the deadline.", "confidence": "lean" },
+    { "chip": "Bench Boost", "gw": 17, "on": "all 15", "why": "The squad's easiest week; check the bench will start.", "confidence": "lean" }
+  ],
   "last_gw": {
     "captain_take": "He had the chances (1.08 xGI) and didn't finish them. Keep him; the underlying numbers are steady.",
     "notes": [

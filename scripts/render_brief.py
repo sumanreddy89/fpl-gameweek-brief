@@ -250,6 +250,39 @@ def render(snap, brief):
               f'<span class="fv">{xg:.1f} / {ga}</span>{verdict_chip(u.get("verdict"))}</li>')
         a("</ul></section>")
 
+    # ---- Chip plan: a week-by-week strip to the chip deadline ----
+    cp = snap.get("chip_plan")
+    planned = brief.get("chip_plan") or []
+    if cp and cp.get("weeks"):
+        by_gw = {}
+        for c in planned:
+            by_gw.setdefault(c.get("gw"), []).append(c.get("chip"))
+        a(f'<section aria-labelledby="h-chips"><h2 id="h-chips">Chip plan <span class="sub">{esc(cp.get("window"))} · '
+          f'{esc(", ".join(cp.get("chips_left") or []))} left</span></h2>')
+        a('<div class="strip-wrap"><ol class="strip" aria-label="Gameweeks to the chip deadline">')
+        for w in cp["weeks"]:
+            f = w.get("xi_avg_fdr")
+            band = 0 if f is None else 2 if f < 2.75 else 3 if f < 3.25 else 4
+            marks = f'<span class="mk d" title="Doubles: {esc(", ".join(w["double"]))}">D</span>' if w.get("double") else ""
+            marks += f'<span class="mk b" title="Blanks: {esc(", ".join(w["blank"]))}">B</span>' if w.get("blank") else ""
+            chips_here = "".join(f'<span class="cp">{esc(c)}</span>' for c in by_gw.get(w["gw"], []))
+            a(f'<li class="wk{" has" if chips_here else ""}"><span class="gwn">GW{esc(w["gw"])}</span>'
+              f'<span class="ease f{band}" title="Starting XI average difficulty">{esc(f if f is not None else "–")}</span>'
+              f'<span class="games">{esc(w.get("xi_games"))}+{esc(w.get("bench_games"))} games</span>{marks}{chips_here}</li>')
+        a("</ol></div>")
+        a('<p class="small legend">Number = your XI\'s average fixture difficulty (lower is easier). D double, B blank in the league.</p>')
+        if planned:
+            a('<ul class="rows">')
+            for c in planned:
+                a(f'<li><div class="r1"><b>{esc(c.get("chip"))}</b> <span class="small">GW{esc(c.get("gw"))}'
+                  + (f' · {esc(c.get("on"))}' if c.get("on") else "") + f'</span>{conf_badge(c.get("confidence"))}</div>'
+                  + (f'<p>{esc(c.get("why"))}</p>' if c.get("why") else "") + "</li>")
+            a("</ul>")
+        if cp.get("unscheduled_fixtures"):
+            a('<p class="small">Unscheduled fixtures (likely future doubles): ' + esc(", ".join(f"{k} {v}" for k, v in cp["unscheduled_fixtures"].items())) + "</p>")
+        a(f'<p class="small">{esc(cp.get("note"))}</p>')
+        a("</section>")
+
     # ---- Transfers detail ----
     if brief.get("transfers") or brief.get("transfer_note"):
         a(f'<section aria-labelledby="h-tr"><h2 id="h-tr">{"Optional move" if rolling else "Transfers"}</h2>')
@@ -279,7 +312,7 @@ def render(snap, brief):
         a("</ul></section>")
 
     bullets("Squad flags", "h-flags", brief.get("flags"), "flags")
-    if brief.get("chip") and brief["chip"].get("detail"):
+    if brief.get("chip") and brief["chip"].get("detail") and not cp:
         bullets("Chips", "h-chips", [brief["chip"]["detail"]])
     bullets("Price watch", "h-price", brief.get("price_watch"))
     bullets("Mini-leagues", "h-leagues", brief.get("leagues"))
@@ -429,6 +462,19 @@ section { min-width: 0; }
 .fv { font: 500 12px var(--mono); color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 @media (max-width: 420px) { .form li { grid-template-columns: 80px minmax(0,1fr) 48px; } .form .chip { grid-column: 2 / -1; justify-self: start; } }
 
+.strip-wrap { overflow-x: auto; margin: 0 -4px; padding: 0 4px 4px; }
+.strip { list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(72px, 1fr); gap: 6px; }
+.wk { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 6px; display: grid; justify-items: center; gap: 3px; text-align: center; }
+.wk.has { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.gwn { font: 700 13px var(--display); letter-spacing: .06em; color: var(--muted); }
+.ease { font: 800 22px/1 var(--display); font-variant-numeric: tabular-nums; padding: 2px 6px; border-radius: 6px; }
+.ease.f2 { background: var(--accent-soft); color: var(--accent); }
+.ease.f3 { background: var(--line); color: var(--ink); }
+.ease.f4 { background: var(--poor-soft); color: var(--poor); }
+.games { font-size: 11px; color: var(--muted); }
+.mk { font: 700 10px var(--mono); padding: 0 5px; border-radius: 4px; }
+.mk.d { background: var(--accent); color: var(--surface); } .mk.b { background: var(--poor); color: var(--surface); }
+.cp { font: 600 10.5px var(--body); background: var(--night); color: var(--night-ink); border-radius: 99px; padding: 1px 7px; white-space: nowrap; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
 .card .ct { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
 .card .conf { margin-left: auto; }

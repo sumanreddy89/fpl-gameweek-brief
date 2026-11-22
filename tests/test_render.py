@@ -98,6 +98,25 @@ if __name__ == "__main__":
     unittest.main()
 
 
+class ChipStrip(unittest.TestCase):
+    def test_strip_marks_planned_chips_and_doubles(self):
+        s = snap()
+        s["chip_plan"] = {"window": "GW12-13", "chips_left": ["Triple Captain"], "note": "Provisional.",
+                          "unscheduled_fixtures": {"T4": 1},
+                          "weeks": [{"gw": 12, "xi_avg_fdr": 3.4, "xi_games": 11, "bench_games": 4, "double": [], "blank": []},
+                                    {"gw": 13, "xi_avg_fdr": 2.5, "xi_games": 13, "bench_games": 4, "double": ["T1"], "blank": []}]}
+        page = rb.render(s, {"chip_plan": [{"chip": "Triple Captain", "gw": 13, "on": "Striker v T2 (H)", "why": "Double.", "confidence": "lean"}]})
+        self.assertIn("Chip plan", page)
+        self.assertIn('<li class="wk has"><span class="gwn">GW13</span>', page)
+        self.assertIn('class="mk d"', page)
+        self.assertIn("Striker v T2 (H)", page)
+        self.assertIn("T4 1", page)
+        self.assertIn('class="ease f4"', page)  # 3.4 is a hard week
+
+    def test_no_strip_without_chips_left(self):
+        self.assertNotIn("Chip plan", rb.render(snap(), {}))
+
+
 class TransferRules(unittest.TestCase):
     """Regression for GW11 (22 Nov 2026): the brief and the sample recommended buying
     N.Jackson on returns alone. The rules in SKILL.md are checked in code."""
