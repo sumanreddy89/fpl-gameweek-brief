@@ -96,3 +96,50 @@ class Render(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TransferRules(unittest.TestCase):
+    """Regression for GW11 (22 Nov 2026): the brief and the sample recommended buying
+    N.Jackson on returns alone. The rules in SKILL.md are checked in code."""
+
+    def snap_with(self, in_verdict, out_verdict):
+        s = snap()
+        s["candidates"]["FWD"][0]["recent"] = {"underlying_last_4": {"verdict": in_verdict}}
+        s["squad"][3]["recent"] = {"underlying_last_4": {"verdict": out_verdict}}
+        return s
+
+    def test_move_without_a_reason_is_flagged(self):
+        problems = rb.check_transfers(snap(), {"transfers": [{"out": "Striker", "in": "Newboy"}]})
+        self.assertIn("no reason", problems[0])
+
+    def test_buying_a_player_running_hot_is_flagged(self):
+        s = self.snap_with("running hot: returns well above chances", "in line with chances")
+        problems = rb.check_transfers(s, {"transfers": [{"out": "Striker", "in": "Newboy", "reason": "clearly better"}]})
+        self.assertTrue(any("ahead of his chances" in p for p in problems), problems)
+
+    def test_selling_an_unlucky_player_is_flagged(self):
+        s = self.snap_with("in line with chances", "unlucky: chances are there, returns aren't")
+        problems = rb.check_transfers(s, {"transfers": [{"out": "Striker", "in": "Newboy", "reason": "poor form"}]})
+        self.assertTrue(any("has the chances" in p for p in problems), problems)
+
+    def test_a_red_flag_outranks_form(self):
+        s = self.snap_with("running hot: returns well above chances", "unlucky: chances are there, returns aren't")
+        self.assertEqual(rb.check_transfers(s, {"transfers": [{"out": "Striker", "in": "Newboy", "reason": "red flag"}]}), [])
+
+    def test_problems_show_on_the_page(self):
+        page = rb.render(snap(), {"transfers": [{"out": "Striker", "in": "Newboy"}]})
+        self.assertIn("Rule check:", page)
+
+    def test_example_decisions_follow_the_rules(self):
+        import json
+        with open(os.path.join(os.path.dirname(__file__), "..", "examples", "brief.json"), encoding="utf-8") as f:
+            brief = json.load(f)
+        self.assertTrue(brief.get("roll"), "the example should show rolling as the default call")
+        self.assertEqual(rb.check_transfers(snap(), brief), [])
+
+    def test_sample_brief_does_not_recommend_a_rejected_move(self):
+        with open(os.path.join(os.path.dirname(__file__), "..", "examples", "sample-brief.md"), encoding="utf-8") as f:
+            text = f.read()
+        rec = next(line for line in text.splitlines() if line.startswith("**Recommendation:"))
+        self.assertIn("roll", rec.lower(), rec)
+        self.assertNotIn("Calvert-Lewin → N.Jackson. Fairly strong call", text)

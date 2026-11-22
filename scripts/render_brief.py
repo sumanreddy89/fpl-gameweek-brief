@@ -81,6 +81,32 @@ def token(p, name, role, flagged):
             + (f'<small class="fm">form {esc(p.get("form"))}</small>' if p.get("form") is not None else "") + '</div>')
 
 
+REASONS = {"red flag", "poor form", "clearly better"}
+
+
+def check_transfers(snap, brief):
+    """The transfer rules in SKILL.md, as checks. Returns a list of problems (empty = fine).
+
+    A move needs a named reason; it mustn't buy a player running hot or sell an unlucky one
+    unless the reason is a red flag (an injury or suspension outranks form)."""
+    players = Players(snap)
+    problems = []
+    for t in brief.get("transfers") or []:
+        label = f'{t.get("out")} → {t.get("in")}'
+        reason = (t.get("reason") or "").lower()
+        if reason not in REASONS:
+            problems.append(f"{label}: no reason from the rules (red flag, poor form, clearly better).")
+            continue
+        if reason == "red flag":
+            continue
+        verdict = lambda name: (((players.get(name) or {}).get("recent") or {}).get("underlying_last_4") or {}).get("verdict") or ""
+        if verdict(t.get("in")).startswith("running hot"):
+            problems.append(f"{label}: buys a player whose returns run ahead of his chances.")
+        if verdict(t.get("out")).startswith("unlucky"):
+            problems.append(f"{label}: sells a player who has the chances but not the returns.")
+    return problems
+
+
 def render(snap, brief):
     players = Players(snap)
     team = snap.get("team") or {}
@@ -231,6 +257,7 @@ def render(snap, brief):
             p = players.get(t.get("in"))
             fx = " · ".join("{} {}".format(*fixture_parts(f)) for f in (p or {}).get("fixtures", [])[:4])
             a(f'<article class="card"><p class="ct"><b>{esc(t.get("out"))}</b> → <b>{esc(t.get("in"))}</b>'
+              + (f' <span class="chip even">{esc(t["reason"])}</span>' if t.get("reason") else "")
               + (f' <span class="small">£{p["price"]:.1f}m · {esc(p["club"])}</span>' if p else "") + f'{conf_badge(t.get("confidence"))}</p>'
               + (f'<p>{esc(t.get("why"))}</p>' if t.get("why") else "")
               + (f'<p class="small">Next: {esc(fx)}</p>' if fx else "")
@@ -261,6 +288,8 @@ def render(snap, brief):
     a('<section class="foot" aria-labelledby="h-src"><h2 id="h-src">Confidence and sources</h2>')
     if brief.get("confidence_note"):
         a(f"<p>{esc(brief['confidence_note'])}</p>")
+    for problem in check_transfers(snap, brief):
+        a(f'<p class="small"><b>Rule check:</b> {esc(problem)}</p>')
     gaps = list(snap.get("data_gaps") or [])
     if gaps:
         a('<p class="small">Data gaps: ' + esc(" ".join(gaps)) + "</p>")
@@ -423,6 +452,8 @@ def main(argv=None):
         snap = json.load(f)
     with open(args.brief, encoding="utf-8") as f:
         brief = json.load(f)
+    for problem in check_transfers(snap, brief):
+        print("rule check: " + problem, file=sys.stderr)
     page = render(snap, brief)
     with open(args.out, "w", encoding="utf-8") as f:
         f.write(page)
