@@ -1,5 +1,5 @@
 {
-  "_about": "Example of the decisions file the agent writes for scripts/render_brief.py. Every field is optional. Numbers such as fixtures, form and xGI come from the snapshot, so don't repeat them here. Confidence is one of: strong, lean, coin flip.",
+  "_about": "Example of the decisions file the agent writes for scripts/render_brief.py. Every field is optional. Numbers such as fixtures, form and xGI come from the snapshot, so don't repeat them here. Confidence is one of: strong, lean, coin flip. Each transfer names its reason from the rules in SKILL.md: red flag, poor form or clearly better.",
   "deadline_local": "Fri 27 Nov · 20:30 Tallinn",
   "written_note": "Written Thu 26 Nov, 21:15 Tallinn. Squad as locked at the GW11 deadline.",
   "headline": "Roll the transfer: nobody is flagged and no move clears the bar. Keep Haaland as captain despite last week's blank.",
@@ -9,6 +9,7 @@
     {
       "out": "Calvert-Lewin",
       "in": "Wissa",
+      "reason": "clearly better",
       "bank_after": 0.6,
       "confidence": "lean",
       "why": "Starts every week and is on penalties; the next four fixtures average 2.5.",

@@ -2,6 +2,8 @@
 
 *A real example using public FPL data from 9 November 2026, ahead of Gameweek 11. Mini-league names are hidden. This snapshot leaves out press-conference news, which a live brief adds with dated sources. It isn't current advice.*
 
+*The transfer call was rewritten on 22 November under the current rules (rolling is the default; don't buy a player whose returns run ahead of his chances). The original sample recommended Calvert-Lewin → N.Jackson; Calvert-Lewin then scored twice in GW11. Calvert-Lewin's form below is from 20 November.*
+
 **Deadline:** Saturday 21 November, 11:00 UK time
 **GW11:** 635 points, rank 1.32m, £2.5m in the bank, 2 free transfers (estimate, check your Transfers screen)
 **Squad source:** public picks locked at the GW10 deadline
@@ -13,14 +15,14 @@
 No blank or double gameweeks in the next four.
 
 ## Transfers
-**Recommendation: Calvert-Lewin → N.Jackson. Fairly strong call.**
+**Recommendation: roll. You'd have 3 free transfers for GW12. Lean.**
 
-| Out | In | Bank after | Next game |
-|---|---|---|---|
-| Calvert-Lewin (sells £6.0m) | N.Jackson (£7.1m, Aston Villa) | £1.4m | Sunderland (H), difficulty 2 |
-| Cherki (sells £7.8m) | Tavernier (£6.7m, Bournemouth) | £3.6m | Nott'm Forest (H), difficulty 3 |
+No starter is flagged, and no move clears the bar this week:
+- **Calvert-Lewin → N.Jackson: not recommended.** Jackson's form (8.8) comes from returns running well ahead of his chances, and Calvert-Lewin isn't injured or losing minutes. Buying on returns alone is the mistake the rules guard against.
+- **Optional, only if Gvardiol is ruled out on Friday:** Gvardiol → a nailed defender such as Van Hecke (Tottenham, 90 minutes every week, high defensive contributions). Gvardiol is on your bench at 75%, so there's no rush.
+- **Cherki → Tavernier:** a coin flip. Wait for team news on Cherki's minutes.
 
-Jackson has form of 8.8 and a home game rated 2, while Calvert-Lewin goes to Chelsea and later Man City. Leave the second transfer until team news settles Cherki and Gvardiol. Cherki to Tavernier is close to a coin flip. No hit needed.
+What would change this: Gvardiol ruled out for weeks, or a price rise on a target you already planned to buy.
 
 ## Captain
 - **Captain: Haaland** (Man City v Fulham, difficulty 2). First-choice penalties, 0.80 expected goal involvements per 90. Clear pick.
@@ -40,7 +42,7 @@ Jackson has form of 8.8 and a home game rated 2, while Calvert-Lewin goes to Che
 | Rogers | Chelsea | LEE (H) 3 | 3.5 |
 | Haaland (C) | Man City | FUL (H) 2 | 6.2 |
 | Evanilson | Bournemouth | NFO (H) 3 | 9.0 |
-| N.Jackson | Aston Villa | SUN (H) 2 | 8.8 |
+| Calvert-Lewin | Leeds | CHE (A) 4 | 2.0 |
 
 **Bench:** Kinsky (GK), 1. Cherki, 2. Gvardiol, 3. Egan.
 
@@ -54,7 +56,7 @@ FPL's predictor is a guide, and 100% means a change is expected at midnight UK t
 |---|---|---|
 | Verbruggen | +99.6% | In the squad |
 | Dewsbury-Hall | +99.0% | Transfer target list |
-| N.Jackson | +49.0% | Suggested transfer |
+| N.Jackson | +49.0% | Rivals' pick, not recommended |
 | Cherki | −60.1% | Possible sale |
 | Egan | −49.4% | On the bench |
 
@@ -80,7 +82,7 @@ FPL's predictor is a guide, and 100% means a change is expected at midnight UK t
 | Player | Rivals starting | Fixtures | Run | Can you act? |
 |---|---|---|---|---|
 | Tavernier £6.7m | 61% | 3, 3, 4, 2 | Mixed | Yes, a midfield swap |
-| N.Jackson £7.1m | 61% | 2, 2, 3, 2 | Good | Yes, for Calvert-Lewin |
+| N.Jackson £7.1m | 61% | 2, 2, 3, 2 | Good | Possible for Calvert-Lewin, but returns are ahead of chances |
 | Palmer £9.8m | 59% | 3, 2, 2, 4 | Mixed | Yes, a midfield swap |
 | Raya £6.2m | 44% | 3, 4, 4, 3 | Tough | No, Arsenal is full |
 | Isak £9.3m | 30% | 3, 3, 2, 4 | Mixed | Only for Haaland |

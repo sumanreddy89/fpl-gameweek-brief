@@ -46,6 +46,7 @@ fpl-gameweek-brief/
 │   ├── fpl_leagues.py       # compares your picks with your mini-leagues
 │   └── render_brief.py      # turns the agent's decisions into the brief page
 ├── tests/                   # offline tests on invented data
+├── evals/                   # checks an agent follows SKILL.md; see evals/README.md
 └── examples/
     ├── sample-brief.md      # what a finished brief looks like
     └── brief.json           # the decisions file render_brief.py reads

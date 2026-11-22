@@ -77,7 +77,7 @@ If the environment can run scripts and publish a page, render it with the bundle
 python3 scripts/render_brief.py --snapshot /tmp/snap.json --brief /tmp/brief.json --out /tmp/brief.html
 ```
 
-and publish `/tmp/brief.html`. The renderer takes fixtures, form, xGI and the last gameweek from the snapshot, so don't retype numbers in the JSON. Give each decision a confidence of `strong`, `lean` or `coin flip`. Players it can't find are shown as "not in data": fix the name rather than leaving it. If the renderer fails, write the page yourself with the same sections.
+and publish `/tmp/brief.html`. The renderer takes fixtures, form, xGI and the last gameweek from the snapshot, so don't retype numbers in the JSON. Give each decision a confidence of `strong`, `lean` or `coin flip`, and give each transfer a `reason`: `red flag`, `poor form` or `clearly better` (the three reasons in Step 3). The renderer checks the transfer rules and prints any break as a "Rule check" line on the page and on stderr: change the call rather than publish with one. Players it can't find are shown as "not in data": fix the name rather than leaving it. If the renderer fails, write the page yourself with the same sections.
 
 Keep it short enough to read on a phone. Use these sections, in this order:
 
