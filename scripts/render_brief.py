@@ -114,12 +114,14 @@ def render(snap, brief):
     if brief.get("headline"):
         a(f'<p class="headline">{esc(brief["headline"])}</p>')
     a('<ol class="decisions">')
+    # Rolling is a real decision: it goes first, and any move is then shown as optional.
+    rolling = bool(brief.get("roll"))
+    if rolling:
+        a(f'<li><span class="k">Transfer</span><span class="v"><b>{esc(brief["roll"])}</b></span>{conf_badge(brief.get("roll_confidence"))}</li>')
     for t in brief.get("transfers") or []:
-        a(f'<li><span class="k">Transfer</span><span class="v"><b>{esc(t.get("out"))}</b> <span class="arrow">→</span> <b>{esc(t.get("in"))}</b>'
+        a(f'<li><span class="k">{"Optional" if rolling else "Transfer"}</span><span class="v"><b>{esc(t.get("out"))}</b> <span class="arrow">→</span> <b>{esc(t.get("in"))}</b>'
           + (f' <span class="bank">bank £{float(t["bank_after"]):.1f}m after</span>' if t.get("bank_after") is not None else "")
           + f'</span>{conf_badge(t.get("confidence"))}</li>')
-    if brief.get("roll"):
-        a(f'<li><span class="k">Transfer</span><span class="v">{esc(brief["roll"])}</span>{conf_badge(brief.get("roll_confidence"))}</li>')
     for key, label in (("captain", "Captain"), ("vice", "Vice"), ("captain_alt", "Alt. captain")):
         c = brief.get(key) or {}
         if c.get("name"):
@@ -224,7 +226,7 @@ def render(snap, brief):
 
     # ---- Transfers detail ----
     if brief.get("transfers") or brief.get("transfer_note"):
-        a('<section aria-labelledby="h-tr"><h2 id="h-tr">Transfers</h2>')
+        a(f'<section aria-labelledby="h-tr"><h2 id="h-tr">{"Optional move" if rolling else "Transfers"}</h2>')
         for t in brief.get("transfers") or []:
             p = players.get(t.get("in"))
             fx = " · ".join("{} {}".format(*fixture_parts(f)) for f in (p or {}).get("fixtures", [])[:4])

@@ -81,6 +81,14 @@ class Render(unittest.TestCase):
         self.assertIn("Alt. captain", page)
         self.assertIn('<span class="bt"><i>1</i>Back <span class="fdr f2">', page)
 
+    def test_rolling_comes_first_and_moves_become_optional(self):
+        # Regression (GW11): the brief pushed a transfer every week; rolling must read as the call.
+        page = rb.render(snap(), {"roll": "Roll the transfer", "transfers": [{"out": "Striker", "in": "Newboy"}]})
+        self.assertLess(page.index("Roll the transfer"), page.index("Newboy"))
+        self.assertIn('<span class="k">Optional</span>', page)
+        self.assertIn(">Optional move</h2>", page)
+        self.assertNotIn('<span class="k">Transfer</span><span class="v"><b>Striker', page)
+
     def test_empty_brief_still_renders_closing_line(self):
         page = rb.render({"team": {}, "next_gameweek": 1}, {})
         self.assertIn("Reply in a chat with what you want to go with", page)
