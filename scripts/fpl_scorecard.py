@@ -17,6 +17,7 @@ Standard library only. It reports facts; it doesn't grade the manager.
 
 import argparse
 import json
+import os
 import re
 import sys
 from datetime import datetime, timezone
@@ -38,6 +39,27 @@ def parse_call(text):
     moves = [(t.group("out").strip(), t.group("inn").strip()) for t in TRANSFER.finditer(text)]
     return {"gw": int(m.group("gw")), "captain": cap.group("name").strip() if cap else None,
             "transfers": moves, "text": text}
+
+
+def record_call(path, line):
+    """Add one call line to the call log, replacing an earlier line for the same gameweek
+    (a re-run's call wins). Returns the log's lines."""
+    new = parse_call(line)
+    if not new:
+        raise SystemExit(f"Not a call line (it must start with the gameweek, like 'GW12 · Captain: ...'): {line!r}")
+    try:
+        with open(path, encoding="utf-8") as f:
+            lines = [x.rstrip("\n") for x in f if x.strip()]
+    except FileNotFoundError:
+        lines = []
+    lines = [x for x in lines if (parse_call(x) or {}).get("gw") != new["gw"]] + [line.strip()]
+    lines.sort(key=lambda x: parse_call(x)["gw"] if parse_call(x) else 0)
+    folder = os.path.dirname(path)
+    if folder:
+        os.makedirs(folder, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
+    return lines
 
 
 def points_by_round(src, pid):
@@ -165,12 +187,29 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--team-id", type=int, required=True)
     ap.add_argument("--call", action="append", default=[], help="one recorded call line; repeat for each gameweek")
+    ap.add_argument("--calls-file", help="call log: one call line per gameweek; read with the --call lines")
+    ap.add_argument("--record", metavar="LINE", help="add this call line to --calls-file (replacing that gameweek's line) and stop")
     ap.add_argument("--data-dir", help="read saved API JSON instead of the live API (tests)")
     ap.add_argument("--now", help="ISO time to treat as now (tests)")
     args = ap.parse_args(argv)
-    calls = [c for c in (parse_call(t) for t in args.call) if c]
+    if args.record:
+        if not args.calls_file:
+            raise SystemExit("--record needs --calls-file.")
+        args.calls_file = os.path.expanduser(args.calls_file)
+        lines = record_call(args.calls_file, args.record)
+        print(f"recorded; {args.calls_file} has {len(lines)} call(s)")
+        return 0
+    texts = list(args.call)
+    if args.calls_file:
+        args.calls_file = os.path.expanduser(args.calls_file)
+        try:
+            with open(args.calls_file, encoding="utf-8") as f:
+                texts += [x.strip() for x in f if x.strip()]
+        except FileNotFoundError:
+            pass  # no calls recorded yet
+    calls = [c for c in (parse_call(t) for t in texts) if c]
     if not calls:
-        raise SystemExit("No calls to score. Pass --call with lines like 'GW11 · Captain: X · Transfer: A out, B in'.")
+        raise SystemExit("No calls to score yet. Record each brief's call with --record, or pass --call lines like 'GW11 · Captain: X · Transfer: A out, B in'.")
     # When a gameweek has two recorded calls (a re-run), keep both: the page should show it.
     now = datetime.fromisoformat(args.now.replace("Z", "+00:00")) if args.now else None
     try:

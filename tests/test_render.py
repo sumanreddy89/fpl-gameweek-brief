@@ -89,6 +89,17 @@ class Render(unittest.TestCase):
         self.assertIn(">Optional move</h2>", page)
         self.assertNotIn('<span class="k">Transfer</span><span class="v"><b>Striker', page)
 
+    def test_wide_parts_scroll_instead_of_widening_the_page(self):
+        # Safeguard: the chip strip is wider than a phone and must scroll inside its own box.
+        # A clamped grid column stops it (or any wide part) from widening the whole page.
+        page = rb.render(snap(), {})
+        self.assertIn("main.wrap { display: grid; grid-template-columns: minmax(0, 1fr);", page)
+
+    def test_one_free_transfer_is_singular(self):
+        s = snap()
+        s["free_transfers_estimate"] = 1
+        self.assertIn("free transfer (est.)", rb.render(s, {}))
+
     def test_empty_brief_still_renders_closing_line(self):
         page = rb.render({"team": {}, "next_gameweek": 1}, {})
         self.assertIn("Reply in a chat with what you want to go with", page)
